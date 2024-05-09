@@ -22,8 +22,20 @@ fn main() {
             println!("Hello, world!");
         }
         None => {
-            app.refresh();
-            println!("Get xml!");
+            let response = app.fetch_all();
+            match response {
+                Ok(body) => {
+                    app.read_xml(body);
+                    print_all();
+                }
+                Err(e) => {
+                    println!("Error: {:#?}", e);
+                }
+            }
         }
     }
+}
+
+fn print_all() {
+    println!("print_all");
 }

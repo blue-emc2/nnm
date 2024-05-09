@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use tokio::runtime::Runtime;
 
 pub struct App {
@@ -17,10 +15,9 @@ impl App {
         // ...
     }
 
-    pub fn refresh(&self) -> Result<(), Box<dyn std::error::Error>> {
-        println!("refresh");
+    pub fn fetch_all(&self) -> Result<String, reqwest::Error> {
         let url: &str = "https://b.hatena.ne.jp/entrylist/it.rss";
-        let rt = Runtime::new()?;
+        let rt = Runtime::new().unwrap();
         let response = rt.block_on(async {
             reqwest::get(url)
             .await?
@@ -28,6 +25,10 @@ impl App {
             .await
         })?;
         println!("response: {:#?}", response);
-        Ok(())
+        Ok(response)
+    }
+
+    pub fn read_xml(&self, body: String) {
+        // ...
     }
 }
