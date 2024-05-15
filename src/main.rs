@@ -25,7 +25,7 @@ fn main() {
             let response = app.fetch_all();
             match response {
                 Ok(body) => {
-                    app.read_xml(body);
+                    app.parse_xml(body);
                     print_all();
                 }
                 Err(e) => {

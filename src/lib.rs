@@ -1,3 +1,7 @@
+mod parser;
+mod entity;
+
+use parser::Parser;
 use tokio::runtime::Runtime;
 
 pub struct App {
@@ -24,11 +28,13 @@ impl App {
             .text()
             .await
         })?;
-        println!("response: {:#?}", response);
         Ok(response)
     }
 
-    pub fn read_xml(&self, body: String) {
-        // ...
+    pub fn parse_xml(&self, body: String) {
+        let parser = Parser::new();
+        let entity = parser.parse(body);
+
+        println!("entity: {:#?}", entity);
     }
 }
