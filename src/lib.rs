@@ -1,4 +1,4 @@
-mod parser;
+pub mod parser;
 mod entity;
 
 use parser::Parser;
@@ -20,7 +20,8 @@ impl App {
     }
 
     pub fn fetch_all(&self) -> Result<String, reqwest::Error> {
-        let url: &str = "https://b.hatena.ne.jp/entrylist/it.rss";
+        // let url: &str = "https://b.hatena.ne.jp/entrylist/it.rss";
+        let url: &str = "https://rss.itmedia.co.jp/rss/2.0/netlab.xml"; // 2.0
         let rt = Runtime::new().unwrap();
         let response = rt.block_on(async {
             reqwest::get(url)

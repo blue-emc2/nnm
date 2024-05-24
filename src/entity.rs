@@ -14,20 +14,31 @@ pub struct Entity {
 }
 
 use serde::Deserialize;
+#[derive(Clone, Debug, Deserialize)]
+pub struct Item {
+    pub title: String,
+    pub description: String,
+    pub link: String,
+    #[serde(rename = "pubDate")]
+    pub pub_date: String,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct Rdf {
-    channel: Channel,
+    channel: RdfChannel,
     #[serde(default)]
     item: Vec<Item>,
 }
 
 #[derive(Debug, Deserialize)]
-struct Channel {}
+struct RdfChannel {}
 
 #[derive(Debug, Deserialize)]
-struct Item {
-    title: String,
-    link: String,
-    description: String,
+pub struct Rss {
+    pub channel: RssChannel,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RssChannel {
+    pub item: Vec<Item>,
 }
