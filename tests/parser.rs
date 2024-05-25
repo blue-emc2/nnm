@@ -65,4 +65,31 @@ mod tests {
         let result = parser.parse(body);
         assert!(result.is_ok());
     }
+
+    #[test]
+    fn test_parse_atom() {
+        let parser = Parser::new();
+        let body = r#"
+            <feed xmlns="http://www.w3.org/2005/Atom">
+                <title>Example title</title>
+                <link href="https://example.com"/>
+                <updated>2024-05-24T18:00:08+09:00</updated>
+                <entry>
+                    <title>Example title 1</title>
+                    <link href="https://example1.com"/>
+                    <summary>Example description 1</summary>
+                    <pubDate>2024-05-24T18:00:08+09:00</pubDate>
+                </entry>
+                <entry>
+                    <title>Example title 2</title>
+                    <link href="https://example2.com"/>
+                    <summary>Example description 2</summary>
+                    <pubDate>2024-05-24T18:00:08+09:00</pubDate>
+                </entry>
+            </feed>
+        "#.to_string();
+
+        let result = parser.parse(body);
+        assert!(result.is_ok());
+    }
 }

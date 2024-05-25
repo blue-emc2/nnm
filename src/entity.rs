@@ -17,7 +17,8 @@ use serde::Deserialize;
 #[derive(Clone, Debug, Deserialize)]
 pub struct Item {
     pub title: String,
-    pub description: String,
+    pub description: Option<String>,
+    pub summary: Option<String>,
     pub link: String,
     #[serde(rename = "pubDate")]
     pub pub_date: String,
@@ -41,4 +42,9 @@ pub struct Rss {
 #[derive(Debug, Deserialize)]
 pub struct RssChannel {
     pub item: Vec<Item>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Atom {
+    pub entry: Vec<Item>,
 }

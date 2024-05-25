@@ -1,4 +1,4 @@
-use crate::entity::{Entity, EntityType, Item, Rdf, Rss};
+use crate::entity::{Atom, Entity, EntityType, Item, Rdf, Rss};
 use quick_xml::Reader;
 
 pub struct Parser {
@@ -22,10 +22,15 @@ impl Parser {
 
             let entiry = Entity { entity_type: todo!(), title: todo!(), link: todo!(), description: todo!(), pub_date: todo!() };
             Ok(entiry)
-        } else if body.contains("rss") {
+        } else if body.contains("<rss") {
             let rss: Rss = quick_xml::de::from_str(&body).unwrap();
             let item: Item = rss.channel.item[0].clone();
-            let entiry = Entity { entity_type: EntityType::Rss, title: item.title, link: item.link, description: item.description, pub_date: item.pub_date };
+            let entiry = Entity { entity_type: EntityType::Rss, title: item.title, link: item.link, description: item.description.unwrap_or("".to_string()), pub_date: item.pub_date };
+            Ok(entiry)
+        } else if body.contains("<feed") {
+            let atom: Atom = quick_xml::de::from_str(&body).unwrap();
+            let item: Item = atom.entry[0].clone();
+            let entiry = Entity { entity_type: EntityType::Atom, title: item.title, link: item.link, description: item.summary.unwrap_or("".to_string()), pub_date: item.pub_date };
             Ok(entiry)
         } else {
             Err(quick_xml::Error::UnexpectedToken("なんかエラー".to_string()))
