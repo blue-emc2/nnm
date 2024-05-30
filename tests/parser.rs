@@ -33,8 +33,16 @@ mod tests {
             </rdf:RDF>
         "#.to_string();
 
-        let result = parser.parse(body);
-        assert!(result.is_ok());
+        let result = parser.parse(body).unwrap();
+        assert_eq!(result.len(), 2);
+
+        assert_eq!(result.get(0).unwrap().title, "Example title");
+        assert_eq!(result.get(0).unwrap().link, "https://example.com");
+        assert_eq!(result.get(0).unwrap().description, "Example description");
+
+        assert_eq!(result.get(1).unwrap().title, "Example title2");
+        assert_eq!(result.get(1).unwrap().link, "https://example.com2");
+        assert_eq!(result.get(1).unwrap().description, "Example description2");
     }
 
     #[test]
@@ -62,8 +70,16 @@ mod tests {
             </rss>
         "#.to_string();
 
-        let result = parser.parse(body);
-        assert!(result.is_ok());
+        let result = parser.parse(body).unwrap();
+        assert!(result.len() == 2);
+
+        assert_eq!(result.get(0).unwrap().title, "Example title 1");
+        assert_eq!(result.get(0).unwrap().link, "https://example1.com");
+        assert_eq!(result.get(0).unwrap().description, "Example description 1");
+
+        assert_eq!(result.get(1).unwrap().title, "Example title 2");
+        assert_eq!(result.get(1).unwrap().link, "https://example2.com");
+        assert_eq!(result.get(1).unwrap().description, "Example description 2");
     }
 
     #[test]
@@ -89,7 +105,15 @@ mod tests {
             </feed>
         "#.to_string();
 
-        let result = parser.parse(body);
-        assert!(result.is_ok());
+        let result = parser.parse(body).unwrap();
+        assert!(result.len() == 2);
+
+        assert_eq!(result.get(0).unwrap().title, "Example title 1");
+        assert_eq!(result.get(0).unwrap().link, "https://example1.com");
+        assert_eq!(result.get(0).unwrap().description, "Example description 1");
+
+        assert_eq!(result.get(1).unwrap().title, "Example title 2");
+        assert_eq!(result.get(1).unwrap().link, "https://example2.com");
+        assert_eq!(result.get(1).unwrap().description, "Example description 2");
     }
 }

@@ -12,26 +12,49 @@ impl Parser {
         }
     }
 
-    pub fn parse(&self, body: String) -> Result<Entity, quick_xml::Error> {
+    pub fn parse(&self, body: String) -> Result<Vec<Entity>, quick_xml::Error> {
         let mut reader = Reader::from_str(&body);
         reader.trim_text(true);
+        let mut buf = Vec::new();
 
-        if body.contains("rdf") {
-            let item: Rdf = quick_xml::de::from_str(&body).unwrap();
-            println!("{:?}", item);
-
-            let entiry = Entity { entity_type: todo!(), title: todo!(), link: todo!(), description: todo!(), pub_date: todo!() };
-            Ok(entiry)
+        if body.contains("<rdf") {
+            let rdf: Rdf = quick_xml::de::from_str(&body).unwrap();
+            rdf.item.iter().for_each(|item| {
+                let entiry = Entity {
+                    entity_type: EntityType::Rss,
+                    title: item.title.clone(),
+                    link: item.link.get_field(),
+                    description: item.description.clone().unwrap_or("".to_string()),
+                    pub_date: None };
+                buf.push(entiry);
+            });
+            Ok(buf)
         } else if body.contains("<rss") {
             let rss: Rss = quick_xml::de::from_str(&body).unwrap();
-            let item: Item = rss.channel.item[0].clone();
-            let entiry = Entity { entity_type: EntityType::Rss, title: item.title, link: item.link, description: item.description.unwrap_or("".to_string()), pub_date: item.pub_date };
-            Ok(entiry)
+            rss.channel.item.iter().for_each(|item| {
+                let entiry = Entity {
+                    entity_type: EntityType::Rss,
+                    title: item.title.clone(),
+                    link: item.link.get_field(),
+                    description: item.description.clone().unwrap_or("".to_string()),
+                    pub_date: item.pub_date.clone() };
+                buf.push(entiry);
+            });
+
+            Ok(buf)
         } else if body.contains("<feed") {
             let atom: Atom = quick_xml::de::from_str(&body).unwrap();
-            let item: Item = atom.entry[0].clone();
-            let entiry = Entity { entity_type: EntityType::Atom, title: item.title, link: item.link, description: item.summary.unwrap_or("".to_string()), pub_date: item.pub_date };
-            Ok(entiry)
+            atom.entry.iter().for_each(|item| {
+                let entiry = Entity {
+                    entity_type: EntityType::Atom,
+                    title: item.title.clone(),
+                    link: item.link.get_href(),
+                    description: item.summary.clone().unwrap_or("".to_string()),
+                    pub_date: item.pub_date.clone() };
+                buf.push(entiry);
+            });
+
+            Ok(buf)
         } else {
             Err(quick_xml::Error::UnexpectedToken("なんかエラー".to_string()))
         }
