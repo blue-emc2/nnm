@@ -15,7 +15,7 @@ enum Commands {
 
 fn main() {
     let cli = Cli::parse();
-    let app: App = App::new();
+    let mut app: App = App::new();
 
     match &cli.command {
         Some(Commands::Init) => {
@@ -26,7 +26,7 @@ fn main() {
             match response {
                 Ok(body) => {
                     app.parse_xml(body);
-                    print_all();
+                    app.print_all();
                 }
                 Err(e) => {
                     println!("Error: {:#?}", e);
@@ -34,8 +34,4 @@ fn main() {
             }
         }
     }
-}
-
-fn print_all() {
-    println!("print_all");
 }
