@@ -36,13 +36,13 @@ mod tests {
         let result = parser.parse(body).unwrap();
         assert_eq!(result.len(), 2);
 
-        assert_eq!(result.get(0).unwrap().title, "Example title");
-        assert_eq!(result.get(0).unwrap().link, "https://example.com");
-        assert_eq!(result.get(0).unwrap().description, "Example description");
+        assert_eq!(result.get(0).unwrap().title.as_deref(), Some("Example title"));
+        assert_eq!(result.get(0).unwrap().link.as_deref(), Some("https://example.com"));
+        assert_eq!(result.get(0).unwrap().description.as_deref(), Some("Example description"));
 
-        assert_eq!(result.get(1).unwrap().title, "Example title2");
-        assert_eq!(result.get(1).unwrap().link, "https://example.com2");
-        assert_eq!(result.get(1).unwrap().description, "Example description2");
+        assert_eq!(result.get(1).unwrap().title.as_deref(), Some("Example title2"));
+        assert_eq!(result.get(1).unwrap().link.as_deref(), Some("https://example.com2"));
+        assert_eq!(result.get(1).unwrap().description.as_deref(), Some("Example description2"));
     }
 
     #[test]
@@ -73,13 +73,13 @@ mod tests {
         let result = parser.parse(body).unwrap();
         assert!(result.len() == 2);
 
-        assert_eq!(result.get(0).unwrap().title, "Example title 1");
-        assert_eq!(result.get(0).unwrap().link, "https://example1.com");
-        assert_eq!(result.get(0).unwrap().description, "Example description 1");
+        assert_eq!(result.get(0).unwrap().title.as_deref(), Some("Example title 1"));
+        assert_eq!(result.get(0).unwrap().link.as_deref(), Some("https://example1.com"));
+        assert_eq!(result.get(0).unwrap().description.as_deref(), Some("Example description 1"));
 
-        assert_eq!(result.get(1).unwrap().title, "Example title 2");
-        assert_eq!(result.get(1).unwrap().link, "https://example2.com");
-        assert_eq!(result.get(1).unwrap().description, "Example description 2");
+        assert_eq!(result.get(1).unwrap().title.as_deref(), Some("Example title 2"));
+        assert_eq!(result.get(1).unwrap().link.as_deref(), Some("https://example2.com"));
+        assert_eq!(result.get(1).unwrap().description.as_deref(), Some("Example description 2"));
     }
 
     #[test]
@@ -108,12 +108,12 @@ mod tests {
         let result = parser.parse(body).unwrap();
         assert!(result.len() == 2);
 
-        assert_eq!(result.get(0).unwrap().title, "Example title 1");
-        assert_eq!(result.get(0).unwrap().link, "https://example1.com");
-        assert_eq!(result.get(0).unwrap().description, "Example description 1");
+        assert_eq!(result.get(0).unwrap().title.as_deref(), Some("Example title 1"));
+        assert_eq!(result.get(0).unwrap().link.as_deref(), Some("https://example1.com"));
+        assert_eq!(result.get(0).unwrap().description.as_deref(), Some("Example description 1"));
 
-        assert_eq!(result.get(1).unwrap().title, "Example title 2");
-        assert_eq!(result.get(1).unwrap().link, "https://example2.com");
-        assert_eq!(result.get(1).unwrap().description, "Example description 2");
+        assert_eq!(result.get(1).unwrap().title.as_deref(), Some("Example title 2"));
+        assert_eq!(result.get(1).unwrap().link.as_deref(), Some("https://example2.com"));
+        assert_eq!(result.get(1).unwrap().description.as_deref(), Some("Example description 2"));
     }
 }
