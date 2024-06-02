@@ -16,8 +16,6 @@ impl Parser {
         let mut buf = Vec::new();
         let entity_type = self.get_rss_feed_type(&body);
 
-        println!("{:?}", entity_type);
-
         match entity_type {
             EntityType::Rss => {
                 let rss: Rss = quick_xml::de::from_str(&body).unwrap();
@@ -60,7 +58,6 @@ impl Parser {
         loop {
             match reader.read_event() {
                 Ok(Event::Start(ref e)) => {
-                    println!("{:?}", e.name());
                     if e.name() == QName(b"rss") {
                         return EntityType::Rss;
                     } else if e.name() == QName(b"rdf:RDF") {

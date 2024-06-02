@@ -42,7 +42,11 @@ impl App {
 
     pub fn print_all(self) {
         for entity in self.entities {
-            println!("{:?}", entity);
+            println!("----------------------------------------\n");
+            println!("Title: \t\t\t{}", entity.title.unwrap_or_default());
+            println!("URL: \t\t\t{}", entity.link.unwrap_or_default());
+            println!("Description: \t\t{}", entity.description.unwrap_or_default());
+            println!();
         }
     }
 }
