@@ -27,22 +27,22 @@ impl Entity {
     }
 
     pub fn set_rds(&mut self, item: &Item) {
-        self.title = Some(item.title.clone());
-        self.link = Some(item.link.get_field());
-        self.description = Some(item.description.clone().unwrap_or("".to_string()));
+        self.title = item.title.clone();
+        self.link = item.link.field.clone();
+        self.description = item.description.clone();
     }
 
     pub fn set_rss(&mut self, item: &Item) {
-        self.title = Some(item.title.clone());
-        self.link = Some(item.link.get_field());
-        self.description = Some(item.description.clone().unwrap_or("".to_string()));
+        self.title = item.title.clone();
+        self.link = item.link.field.clone();
+        self.description = item.description.clone();
         self.pub_date = item.pub_date.clone();
     }
 
     pub fn set_atom(&mut self, item: &Item) {
-        self.title = Some(item.title.clone());
-        self.link = Some(item.link.get_href());
-        self.description = Some(item.summary.clone().unwrap_or("".to_string()));
+        self.title = item.title.clone();
+        self.link = item.link.href.clone();
+        self.description = item.summary.clone();
         self.pub_date = item.pub_date.clone();
     }
 }
@@ -57,19 +57,9 @@ pub struct Link {
     pub field: Option<String>,
 }
 
-impl Link {
-    pub fn get_href(&self) -> String {
-        self.href.clone().unwrap_or("".to_string())
-    }
-
-    pub fn get_field(&self) -> String {
-        self.field.clone().unwrap_or("".to_string())
-    }
-}
-
 #[derive(Clone, Debug, Deserialize)]
 pub struct Item {
-    pub title: String,
+    pub title: Option<String>,
     pub description: Option<String>,
     pub summary: Option<String>,
     pub link: Link,
