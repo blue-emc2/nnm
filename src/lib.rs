@@ -3,6 +3,12 @@ mod entity;
 
 use parser::Parser;
 use tokio::runtime::Runtime;
+use crossterm::{
+    event::{self, Event, KeyCode},
+    execute,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen},
+};
+use std::io::stdout;
 
 pub struct App {
     entities: Vec<entity::Entity>,
@@ -28,19 +34,38 @@ impl App {
         Ok(response)
     }
 
-    pub fn parse_xml(&mut self, body: String) {
+    pub fn parse_xml(&mut self, body: String) -> Result<(), quick_xml::Error> {
         let parser = Parser::new();
         let ret = parser.parse(body);
 
         match ret {
-            Ok(entities) => self.entities = entities,
+            Ok(entities) => {
+                self.entities = entities;
+                Ok(())
+            }
             Err(e) => {
                 println!("{:?}", e);
+                Err(e)
             }
         }
     }
 
-    pub fn print_all(self) {
+    pub fn screen_draw(self) -> crossterm::Result<()> {
+        execute!(stdout(), EnterAlternateScreen)?;
+        self.print_all();
+        loop {
+            if let Event::Key(event) = event::read()? {
+                match event.code {
+                    KeyCode::Char('q') => break,
+                    _ => {}
+                }
+            }
+        }
+        execute!(stdout(), LeaveAlternateScreen)?;
+        Ok(())
+    }
+
+    fn print_all(self) {
         for entity in self.entities {
             println!("----------------------------------------\n");
             println!("Title: \t\t\t{}", entity.title.unwrap_or_default());

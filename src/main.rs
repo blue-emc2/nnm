@@ -25,13 +25,20 @@ fn main() {
             let response = app.fetch_all();
             match response {
                 Ok(body) => {
-                    app.parse_xml(body);
-                    app.print_all();
+                    if let Err(e) = app.parse_xml(body) {
+                        println!("Error parsing XML: {:#?}", e);
+                        return ;
+                    }
+                    if let Err(e) = app.screen_draw() {
+                        println!("Error drawing screen: {:#?}", e);
+                        return ;
+                    }
                 }
                 Err(e) => {
                     println!("Error: {:#?}", e);
                 }
             }
+
         }
     }
 }
