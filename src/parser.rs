@@ -1,4 +1,4 @@
-use crate::entity::{Atom, Entity, EntityType, Item, Rdf, Rss};
+use crate::entity::{Atom, Entity, EntityType, Rdf, Rss};
 use quick_xml::{events::Event, name::QName, Reader};
 
 pub struct Parser {
