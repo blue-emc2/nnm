@@ -1,36 +1,42 @@
-pub mod parser;
 mod entity;
+pub mod parser;
+pub mod screen;
 
 use parser::Parser;
-use tokio::runtime::Runtime;
-use crossterm::{
-    event::{self, Event, KeyCode},
-    execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen},
-};
-use std::io::stdout;
+use screen::Screen;
+use std::fs::File;
+use std::io::Read;
 
 pub struct App {
     entities: Vec<entity::Entity>,
+    screen: Screen,
 }
 
 impl App {
     pub fn new() -> Self {
-        App {
+        let app = App {
             entities: Vec::new(),
-        }
+            screen: Screen::new(),
+        };
+        app
     }
 
     pub fn fetch_all(&self) -> Result<String, reqwest::Error> {
-        let url: &str = "https://b.hatena.ne.jp/entrylist/it.rss";
+        let mut file = File::open("tests/fixtures/sample.xml").unwrap();
+        let mut response = String::new();
+        file.read_to_string(&mut response).unwrap();
+
+        // TODO: 後で引数とかで切り替えたい
+        // let url: &str = "https://game.watch.impress.co.jp/data/rss/1.0/gmw/feed.rdf";
+        // let url: &str = "https://b.hatena.ne.jp/entrylist/it.rss";
         // let url: &str = "https://rss.itmedia.co.jp/rss/2.0/netlab.xml"; // 2.0
-        let rt = Runtime::new().unwrap();
-        let response = rt.block_on(async {
-            reqwest::get(url)
-            .await?
-            .text()
-            .await
-        })?;
+        // let rt = Runtime::new().unwrap();
+        // let response = rt.block_on(async {
+        //     reqwest::get(url)
+        //     .await?
+        //     .text()
+        //     .await
+        // })?;
         Ok(response)
     }
 
@@ -50,28 +56,14 @@ impl App {
         }
     }
 
-    pub fn screen_draw(self) -> crossterm::Result<()> {
-        execute!(stdout(), EnterAlternateScreen)?;
-        self.print_all();
-        loop {
-            if let Event::Key(event) = event::read()? {
-                match event.code {
-                    KeyCode::Char('q') => break,
-                    _ => {}
-                }
+    pub fn screen_draw(self) -> Result<(), Box<dyn std::error::Error>> {
+        let ret = self.screen.draw(&self.entities);
+        match ret {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                println!("{:?}", e);
+                Err(e)
             }
-        }
-        execute!(stdout(), LeaveAlternateScreen)?;
-        Ok(())
-    }
-
-    fn print_all(self) {
-        for entity in self.entities {
-            println!("----------------------------------------\n");
-            println!("Title: \t\t\t{}", entity.title.unwrap_or_default());
-            println!("URL: \t\t\t{}", entity.link.unwrap_or_default());
-            println!("Description: \t\t{}", entity.description.unwrap_or_default());
-            println!();
         }
     }
 }
