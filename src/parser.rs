@@ -26,7 +26,7 @@ impl Parser {
                 });
 
                 Ok(buf)
-            },
+            }
             EntityType::Rdf => {
                 let rdf: Rdf = quick_xml::de::from_str(&body).unwrap();
                 rdf.item.iter().for_each(|item| {
@@ -36,7 +36,7 @@ impl Parser {
                 });
 
                 Ok(buf)
-            },
+            }
             EntityType::Atom => {
                 let atom: Atom = quick_xml::de::from_str(&body).unwrap();
                 atom.entry.iter().for_each(|item| {
@@ -46,8 +46,10 @@ impl Parser {
                 });
 
                 Ok(buf)
-            },
-            _ => Err(quick_xml::Error::UnexpectedToken("なんかエラー".to_string())),
+            }
+            _ => Err(quick_xml::Error::UnexpectedToken(
+                "なんかエラー".to_string(),
+            )),
         }
     }
 

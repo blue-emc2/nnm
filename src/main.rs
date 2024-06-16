@@ -1,4 +1,4 @@
-use clap::{Subcommand, Parser};
+use clap::{Parser, Subcommand};
 use nnm::App;
 
 #[derive(Parser, Debug)]
@@ -27,18 +27,17 @@ fn main() {
                 Ok(body) => {
                     if let Err(e) = app.parse_xml(body) {
                         println!("Error parsing XML: {:#?}", e);
-                        return ;
+                        return;
                     }
                     if let Err(e) = app.screen_draw() {
                         println!("Error drawing screen: {:#?}", e);
-                        return ;
+                        return;
                     }
                 }
                 Err(e) => {
                     println!("Error: {:#?}", e);
                 }
             }
-
         }
     }
 }

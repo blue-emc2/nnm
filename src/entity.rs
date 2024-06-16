@@ -1,9 +1,9 @@
 #[derive(Debug)]
 pub enum EntityType {
-    Rdf,    // RSS 1.0のこと
+    Rdf, // RSS 1.0のこと
     Rss,
     Atom,
-    Unknown
+    Unknown,
 }
 
 #[derive(Debug)]
