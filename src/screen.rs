@@ -24,41 +24,45 @@ impl Screen {
 
         let (width, height) = crossterm::terminal::size().unwrap();
         let mut row: u16 = 1;
-        for (i, entity) in entities.iter().enumerate() {
+        for (_i, entity) in entities.iter().enumerate() {
             let title = entity.title.as_ref().unwrap();
-            let description = format!(
-                "Description: \t{}\r\n",
-                entity.description.as_ref().unwrap()
-            );
+            let description = format!("| {}\r\n", entity.description.as_ref().unwrap());
             let link = entity.link.as_ref().unwrap();
 
-            execute!(
-                stdout,
-                Print(format!(
-                    "{},{}--------------------------------------\r\n",
-                    i, height
-                ))
-            )
-            .unwrap();
+            Self::print_border();
             row += 1;
             if row >= height {
                 break;
             }
 
-            execute!(stdout, Print(format!("Title: \t\t{}\r\n", title))).unwrap();
+            let title_width = UnicodeWidthStr::width_cjk(title.as_str());
+            let space_count = if width as usize <= title_width {
+                0
+            } else {
+                width as usize - title_width
+            };
+            let fill_space = " ".repeat(space_count - 4);
+            execute!(stdout, Print(format!("| {}{} |\r\n", title, fill_space))).unwrap();
             row += 1;
             if row >= height {
                 break;
             }
 
             let count: u16 = Self::get_line_count(&description, width);
-            execute!(stdout, Print(format!("{}, {}", count, description))).unwrap();
+            execute!(stdout, Print(format!("{}", description))).unwrap();
             row += count;
             if row >= height {
                 break;
             }
 
-            execute!(stdout, Print(format!("URL: \t\t{}, {}\r\n", link, row))).unwrap();
+            let link_width = UnicodeWidthStr::width_cjk(link.as_str());
+            let space_count = if width as usize <= link_width {
+                0
+            } else {
+                width as usize - link_width
+            };
+            let fill_space = " ".repeat(space_count - 4);
+            execute!(stdout, Print(format!("| {}{} |\r\n", link, fill_space))).unwrap();
             row += 1;
             if row >= height {
                 break;
@@ -92,5 +96,12 @@ impl Screen {
             count += 2;
         }
         count
+    }
+
+    fn print_border() {
+        let mut stdout = stdout();
+        let (width, _height) = crossterm::terminal::size().unwrap();
+        let border = "-".repeat(width as usize - 4);
+        execute!(stdout, Print(format!("+ {} +", border))).unwrap();
     }
 }
