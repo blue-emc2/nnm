@@ -1,4 +1,5 @@
 mod entity;
+mod table;
 pub mod parser;
 pub mod screen;
 
@@ -57,7 +58,7 @@ impl App {
     }
 
     pub fn screen_draw(self) -> Result<(), Box<dyn std::error::Error>> {
-        let ret = self.screen.draw(&self.entities);
+        let ret = self.screen.draw2(&self.entities);
         match ret {
             Ok(_) => Ok(()),
             Err(e) => {

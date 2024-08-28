@@ -1,4 +1,5 @@
 use std::io::stdout;
+use std::vec;
 
 use crossterm::style::Print;
 use crossterm::terminal::EnterAlternateScreen;
@@ -10,12 +11,34 @@ use crossterm::{
 use unicode_width::UnicodeWidthStr;
 
 use crate::entity;
+use crate::table::{Table, Row};
 
 pub struct Screen {}
 
 impl Screen {
     pub fn new() -> Self {
         Screen {}
+    }
+
+    pub fn draw2(&self, entities: &Vec<entity::Entity>) -> Result<(), Box<dyn std::error::Error>>  {
+        let (width, height) = crossterm::terminal::size().unwrap();
+        let mut table = Table::new();
+        let header = Row::from(vec!["No".to_string(), "Body".to_string()]);
+        table
+            .set_size(width, height)
+            .set_header(header);
+        for entity in entities.iter() {
+            let title = entity.title.clone().unwrap_or_default();
+            let description = entity.description.clone().unwrap_or_default();
+            let link = entity.link.clone().unwrap_or_default();
+
+            let row = Row::from(vec![title, description, link]);
+            table.add_row(row);
+        }
+
+        println!("{}", table);
+
+        Ok(())
     }
 
     pub fn draw(&self, entities: &Vec<entity::Entity>) -> Result<(), Box<dyn std::error::Error>> {
