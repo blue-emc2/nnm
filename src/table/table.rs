@@ -56,7 +56,7 @@ impl Table {
         // ]
         if let Some(header) = header {
             let header_content = header.get_content();
-            lines.push(header_content.join(" \t| "));
+            lines.push(format!("{:>3} | {}", header_content[0], header_content[1]));
         }
 
         // [
@@ -73,10 +73,10 @@ impl Table {
 
             for (key, value) in contents {
                 if key == "title" {
-                    let formatted_title = format!(" {}\t| {}", row_index, value);
+                    let formatted_title = format!("{:>3} | {}", row_index, value);
                     lines.push(formatted_title);
                 } else {
-                    let formatted_text = format!("\t| {}", value);
+                    let formatted_text = format!("    | {}", value);
                     lines.push(formatted_text);
                 }
             }
