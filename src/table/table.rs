@@ -1,5 +1,6 @@
 use core::fmt;
 use crate::table::Row;
+use crate::table::row::ContentKey;
 
 pub struct Table {
     width: Option<u16>,
@@ -75,14 +76,19 @@ impl Table {
             let contents = row.get_content_key_pair();
 
             for (key, value) in contents {
-                if key == "title" {
-                    let formatted_title = format!("{:>3} | {}", row_index, value);
-                    lines.push(formatted_title);
-                } else {
-                    let formatted_text = format!("    | {}", value);
-                    lines.push(formatted_text);
+                match key {
+                    ContentKey::Title => {
+                        let formatted_title = format!("{:>3} | {}", row_index, value);
+                        lines.push(formatted_title);
+                    }
+                    _ => {
+                        let formatted_text = format!("    | {}", value);
+                        lines.push(formatted_text);
+                    }
                 }
             }
+
+            lines.push(border.clone());
         }
 
         lines.into_iter()
