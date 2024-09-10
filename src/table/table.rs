@@ -59,6 +59,9 @@ impl Table {
             lines.push(format!("{:>3} | {}", header_content[0], header_content[1]));
         }
 
+        let border = Self::get_border(self.width.unwrap_or(0));
+        lines.push(border.clone());
+
         // [
         //   title, description, link -> 0 | title
         //                                 | description
@@ -83,6 +86,14 @@ impl Table {
         }
 
         lines.into_iter()
+    }
+
+    fn get_border(width: u16) -> String {
+        let mut border = String::new();
+        for _ in 0..width {
+            border.push('-');
+        }
+        border
     }
 }
 
