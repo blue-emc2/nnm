@@ -1,4 +1,6 @@
 use core::fmt;
+use unicode_width::UnicodeWidthStr;
+
 use crate::table::Row;
 use crate::table::row::ContentKey;
 
@@ -60,7 +62,7 @@ impl Table {
             lines.push(format!("{:>3} | {}", header_content[0], header_content[1]));
         }
 
-        let border = Self::get_border(self.width.unwrap_or(0));
+        let border = self.draw_border();
         lines.push(border.clone());
 
         // [
@@ -82,7 +84,7 @@ impl Table {
                         lines.push(formatted_title);
                     }
                     _ => {
-                        let formatted_text = format!("    | {}", value);
+                        let formatted_text = self.draw_text(&value);
                         lines.push(formatted_text);
                     }
                 }
@@ -94,12 +96,54 @@ impl Table {
         lines.into_iter()
     }
 
-    fn get_border(width: u16) -> String {
+    fn draw_border(&self) -> String {
         let mut border = String::new();
-        for _ in 0..width {
+        let w = self.width.unwrap_or_else(|| 0);
+        for _ in 0..w {
             border.push('-');
         }
         border
+    }
+
+    /**
+     * 引数の文字列が画面端に到達したら改行する
+     *
+     * | descri\n
+     * | ption
+     */
+    fn draw_text(&self, text: &str) -> String {
+        let formatted_text = format!("    | {}", text);
+        let mut formatted_tmp_text = String::new();
+        let mut line = String::new();
+        let w = self.width.unwrap_or_else(|| 0);
+        let size = UnicodeWidthStr::width_cjk(text) as u16;
+        if size < w {
+            return formatted_text.to_string();
+        }
+
+        for c in formatted_text.chars() {
+            let char_size = UnicodeWidthStr::width_cjk(c.to_string().as_str()) as u16;
+            let line_size = UnicodeWidthStr::width_cjk(line.as_str()) as u16;
+
+            if line_size + char_size >= w {
+                formatted_tmp_text.push_str(&line);
+                formatted_tmp_text.push('\n');
+                line.clear();
+                line.push_str("    | ");
+            }
+
+            line.push(c);
+        }
+
+        formatted_tmp_text.push_str(&line);
+
+        #[cfg(debug_assertions)]
+        {
+            formatted_tmp_text.push_str("\n");
+            formatted_tmp_text.push_str(&format!("    | width: {}, size: {}", w, size));
+        }
+
+        formatted_tmp_text
     }
 }
 

@@ -21,7 +21,7 @@ impl Screen {
     }
 
     pub fn draw2(&self, entities: &Vec<entity::Entity>) -> Result<(), Box<dyn std::error::Error>>  {
-        let (width, height) = crossterm::terminal::size().unwrap();
+        let (width, height) = crossterm::terminal::size().unwrap_or_else(|_| (80, 24));
         let mut table = Table::new();
         let header = Row::from(vec!["No".to_string(), "Body".to_string()]);
         table
