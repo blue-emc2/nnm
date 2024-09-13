@@ -59,7 +59,7 @@ impl App {
     }
 
     pub fn screen_draw(self, options: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
-        let ret = self.screen.draw2(&self.entities, options);
+        let ret = self.screen.draw(&self.entities, options);
         match ret {
             Ok(_) => Ok(()),
             Err(e) => {
