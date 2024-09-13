@@ -1,4 +1,5 @@
 use core::fmt;
+use std::collections::HashMap;
 use unicode_width::UnicodeWidthStr;
 
 use crate::table::Row;
@@ -9,6 +10,7 @@ pub struct Table {
     height: Option<u16>,
     rows: Vec<Row>,
     header: Option<Row>,
+    options: HashMap<String, String>,
 }
 
 impl fmt::Display for Table {
@@ -30,6 +32,7 @@ impl Table {
             height: None,
             rows: Vec::new(),
             header: None,
+            options: HashMap::new(),
         }
     }
 
@@ -44,6 +47,11 @@ impl Table {
         self
     }
 
+    pub fn set_draw_options(&mut self, options: HashMap<String, String>) -> &mut Self {
+        self.options = options;
+        self
+    }
+
     pub fn add_row(&mut self, row: Row) -> &mut Self {
         self.rows.push(row);
         self
@@ -53,6 +61,7 @@ impl Table {
         let mut lines: Vec<String> = Vec::new();
         let header = self.header.as_ref();
         let rows = &self.rows;
+        let line_limit: usize = self.options.get("head").and_then(|v| v.parse().ok()).unwrap_or(10);
 
         // [
         //    No,""
@@ -91,6 +100,10 @@ impl Table {
             }
 
             lines.push(border.clone());
+
+            if row_index >= line_limit {
+                break;
+            }
         }
 
         lines.into_iter()

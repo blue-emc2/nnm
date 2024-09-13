@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::io::stdout;
 use std::vec;
 
@@ -20,13 +21,14 @@ impl Screen {
         Screen {}
     }
 
-    pub fn draw2(&self, entities: &Vec<entity::Entity>) -> Result<(), Box<dyn std::error::Error>>  {
+    pub fn draw2(&self, entities: &Vec<entity::Entity>, options: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>>  {
         let (width, height) = crossterm::terminal::size().unwrap_or_else(|_| (80, 24));
         let mut table = Table::new();
         let header = Row::from(vec!["No".to_string(), "Body".to_string()]);
         table
             .set_size(width, height)
-            .set_header(header);
+            .set_header(header)
+            .set_draw_options(options);
         for entity in entities.iter() {
             let title = entity.title.clone().unwrap_or_default();
             let description = entity.description.clone().unwrap_or_default();

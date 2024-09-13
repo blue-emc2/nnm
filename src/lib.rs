@@ -5,6 +5,7 @@ pub mod screen;
 
 use parser::Parser;
 use screen::Screen;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 
@@ -57,8 +58,8 @@ impl App {
         }
     }
 
-    pub fn screen_draw(self) -> Result<(), Box<dyn std::error::Error>> {
-        let ret = self.screen.draw2(&self.entities);
+    pub fn screen_draw(self, options: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
+        let ret = self.screen.draw2(&self.entities, options);
         match ret {
             Ok(_) => Ok(()),
             Err(e) => {
