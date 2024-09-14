@@ -596,6 +596,7 @@ dependencies = [
  "quick-xml",
  "reqwest",
  "serde",
+ "serde_json",
  "tokio",
  "unicode-width",
 ]
