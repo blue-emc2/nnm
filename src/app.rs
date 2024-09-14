@@ -1,16 +1,17 @@
+mod screen;
 mod entity;
+mod parser;
 mod table;
-pub mod parser;
-pub mod screen;
 
-use parser::Parser;
-use screen::Screen;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
+use screen::Screen;
+use entity::Entity;
+use parser::Parser;
 
 pub struct App {
-    entities: Vec<entity::Entity>,
+    entities: Vec<Entity>,
     screen: Screen,
 }
 

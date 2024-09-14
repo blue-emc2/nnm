@@ -1,7 +1,9 @@
+mod app;
+
 use std::collections::HashMap;
 
 use clap::{Parser, Subcommand};
-use nnm::App;
+use app::App;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

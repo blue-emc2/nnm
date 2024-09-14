@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use std::vec;
-use crate::entity;
-use crate::table::{Table, Row};
+use crate::app::entity;
+use crate::app::table::table::Table;
+use crate::app::table::row::Row;
 
 pub struct Screen {}
 

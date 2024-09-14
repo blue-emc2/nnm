@@ -2,8 +2,7 @@ use core::fmt;
 use std::collections::HashMap;
 use unicode_width::UnicodeWidthStr;
 
-use crate::table::Row;
-use crate::table::row::ContentKey;
+use crate::app::table::row::{Row, ContentKey};
 
 pub struct Table {
     width: Option<u16>,
