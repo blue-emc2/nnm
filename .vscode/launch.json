@@ -44,6 +44,24 @@
     {
       "type": "lldb",
       "request": "launch",
+      "name": "Debug executable 'nnm init'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=nnm",
+          "--package=nnm"
+        ],
+        "filter": {
+          "name": "nnm",
+          "kind": "bin"
+        }
+      },
+      "args": ["init"],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
       "name": "Debug unit tests in executable 'nnm'",
       "cargo": {
         "args": [
