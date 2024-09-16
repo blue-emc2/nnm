@@ -30,9 +30,22 @@ fn main() {
 
     match &cli.command {
         Some(Commands::Init) => {
-            println!("Hello, world!");
+            match app.init_config() {
+                Ok(path) => {
+                    println!("設定ファイルを作成しました。{}", path);
+                }
+                Err(e) => {
+                    println!("Error: {:#?}", e);
+                }
+            }
         }
         None => {
+            if let Some(config) = app.load_config() {
+                println!("Config: {:#?}", config);
+            } else {
+                return;
+            }
+
             let response = app.fetch_all();
             match response {
                 Ok(body) => {

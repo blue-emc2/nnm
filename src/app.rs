@@ -2,10 +2,14 @@ mod screen;
 mod entity;
 mod parser;
 mod table;
+mod config;
 
 use std::collections::HashMap;
+use std::env;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
+use config::Config;
 use screen::Screen;
 use entity::Entity;
 use parser::Parser;
@@ -13,6 +17,7 @@ use parser::Parser;
 pub struct App {
     entities: Vec<Entity>,
     screen: Screen,
+    default_config_path: String,
 }
 
 impl App {
@@ -20,6 +25,7 @@ impl App {
         let app = App {
             entities: Vec::new(),
             screen: Screen::new(),
+            default_config_path: ".config/nnm/config.json".to_string(),
         };
         app
     }
@@ -66,6 +72,43 @@ impl App {
             Err(e) => {
                 println!("{:?}", e);
                 Err(e)
+            }
+        }
+    }
+
+    pub fn init_config(&self) -> Result<String, std::io::Error> {
+        let home_dir = env::var("HOME").unwrap_or_else(|_| ".".to_string());
+        let mut config_dir = PathBuf::from(home_dir);
+        config_dir.push(".config/nnm");
+
+        if !config_dir.exists() {
+            std::fs::create_dir_all(&config_dir)?;
+        }
+
+        let config_file_path = config_dir.join("config.json");
+        let config = Config::new();
+        let config_json = serde_json::to_string_pretty(&config)?;
+
+        let mut file = File::create(config_file_path.clone())?;
+        write!(file, "{}", config_json)?;
+
+        Ok(config_file_path.into_os_string().into_string().unwrap())
+    }
+
+    pub fn load_config(&self) -> Option<Config> {
+        let exists = Path::new(&self.default_config_path).try_exists();
+        match exists {
+            Ok(true) => {
+                let config = Config::load_from_file().unwrap();
+                Some(config)
+            }
+            Ok(false) => {
+                println!("設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。");
+                None
+            }
+            Err(e) => {
+                println!("{:?}", e);
+                None
             }
         }
     }
