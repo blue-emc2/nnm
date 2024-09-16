@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use config::Config;
 use screen::Screen;
 use entity::Entity;
@@ -17,7 +17,6 @@ use parser::Parser;
 pub struct App {
     entities: Vec<Entity>,
     screen: Screen,
-    default_config_path: String,
 }
 
 impl App {
@@ -25,7 +24,6 @@ impl App {
         let app = App {
             entities: Vec::new(),
             screen: Screen::new(),
-            default_config_path: ".config/nnm/config.json".to_string(),
         };
         app
     }
@@ -96,7 +94,7 @@ impl App {
     }
 
     pub fn load_config(&self) -> Option<Config> {
-        let exists = Path::new(&self.default_config_path).try_exists();
+        let exists = Config::default_config_path().try_exists();
         match exists {
             Ok(true) => {
                 let config = Config::load_from_file().unwrap();
@@ -109,6 +107,21 @@ impl App {
             Err(e) => {
                 println!("{:?}", e);
                 None
+            }
+        }
+    }
+
+    pub fn add_link(&self, url: &str) -> Result<String, std::io::Error> {
+        let mut config = Config::load_from_file()?;
+        let ret = config.push_link(url);
+
+        match ret {
+            Ok(url) => {
+                Ok(url)
+            }
+            Err(e) => {
+                println!("{:?}", e);
+                Err(e)
             }
         }
     }

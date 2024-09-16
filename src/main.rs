@@ -19,6 +19,9 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     Init,
+    Add {
+        url: String,
+    },
 }
 
 fn main() {
@@ -33,6 +36,17 @@ fn main() {
             match app.init_config() {
                 Ok(path) => {
                     println!("設定ファイルを作成しました。{}", path);
+                    println!("nnm add {{url}} でRSSのURLを追加しましょう。");
+                }
+                Err(e) => {
+                    println!("Error: {:#?}", e);
+                }
+            }
+        }
+        Some(Commands::Add { url }) => {
+            match app.add_link(url) {
+                Ok(url) => {
+                    println!("{} を追加しました。", url);
                 }
                 Err(e) => {
                     println!("Error: {:#?}", e);
