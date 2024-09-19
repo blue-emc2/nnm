@@ -21,6 +21,10 @@ impl Config {
         }
     }
 
+    pub fn links(&self) -> Vec<String> {
+        self.links.clone()
+    }
+
     pub fn default_config_path() -> PathBuf {
         let home_dir = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
         let mut config_dir = PathBuf::from(home_dir);

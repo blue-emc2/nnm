@@ -4,11 +4,13 @@ mod parser;
 mod table;
 mod config;
 
+use tokio::runtime::Runtime;
 use std::collections::HashMap;
 use std::env;
 use std::fs::File;
-use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::result::Result;
+use std::io::Write;
 use config::Config;
 use screen::Screen;
 use entity::Entity;
@@ -28,42 +30,80 @@ impl App {
         app
     }
 
-    pub fn fetch_all(&self) -> Result<String, reqwest::Error> {
-        let mut file = File::open("tests/fixtures/sample.xml").unwrap();
-        let mut response = String::new();
-        file.read_to_string(&mut response).unwrap();
+    pub fn run(&mut self, options: HashMap<String, String>) {
+        let config = self.load_config();
+        if config.is_none() {
+            return;
+        }
+
+        let links = config.unwrap().links();
+        let rt = Runtime::new().unwrap();
+
+        let results = rt.block_on(async {
+            let tasks = links.into_iter().map(|link| {
+                tokio::spawn(async move {
+                    println!("- start fetch task {} : {:?}", link, std::thread::current().id());
+                    let res = Self::fetch_rss(link.clone()).await;
+                    println!("- end fetch task {:?} : {:?}", link, std::thread::current().id());
+                    res
+                })
+            }).collect::<Vec<_>>();
+
+            let results = futures::future::join_all(tasks).await;
+
+            let fetched_data: Vec<String> = results.into_iter()
+                .filter_map(|res| res.ok())
+                .filter_map(|res| res.ok())
+                .collect();
+
+            fetched_data
+        });
+
+        if let Err(e) = self.parse_xml(results) {
+            println!("Error parsing XML: {:#?}", e);
+            return;
+        }
+        if let Err(e) = self.screen_draw(options) {
+            println!("Error drawing screen: {:#?}", e);
+            return;
+        }
+    }
+
+    async fn fetch_rss(url: String) -> Result<String, reqwest::Error> {
+        // let mut file = File::open("tests/fixtures/sample.xml").unwrap();
+        // let mut response = String::new();
+        // file.read_to_string(&mut response).unwrap();
 
         // TODO: 後で引数とかで切り替えたい
         // let url: &str = "https://game.watch.impress.co.jp/data/rss/1.0/gmw/feed.rdf";
         // let url: &str = "https://b.hatena.ne.jp/entrylist/it.rss";
         // let url: &str = "https://rss.itmedia.co.jp/rss/2.0/netlab.xml"; // 2.0
-        // let rt = Runtime::new().unwrap();
-        // let response = rt.block_on(async {
-        //     reqwest::get(url)
-        //     .await?
-        //     .text()
-        //     .await
-        // })?;
-        Ok(response)
+
+        let response = reqwest::get(&url).await?;
+        let body = response.text().await?;
+        Ok(body)
     }
 
-    pub fn parse_xml(&mut self, body: String) -> Result<(), quick_xml::Error> {
+    pub fn parse_xml(&mut self, bodys: Vec<String>) -> Result<(), quick_xml::Error> {
         let parser = Parser::new();
-        let ret = parser.parse(body);
 
-        match ret {
-            Ok(entities) => {
-                self.entities = entities;
-                Ok(())
-            }
-            Err(e) => {
-                println!("{:?}", e);
-                Err(e)
+        for body in bodys {
+            let ret = parser.parse(body);
+            match ret {
+                Ok(mut entities) => {
+                    self.entities.append(&mut entities);
+                }
+                Err(e) => {
+                    println!("{:?}", e);
+                    return Err(e);
+                }
             }
         }
+
+        Ok(())
     }
 
-    pub fn screen_draw(self, options: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn screen_draw(&mut self, options: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
         let ret = self.screen.draw(&self.entities, options);
         match ret {
             Ok(_) => Ok(()),

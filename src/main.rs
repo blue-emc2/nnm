@@ -54,28 +54,7 @@ fn main() {
             }
         }
         None => {
-            if let Some(config) = app.load_config() {
-                println!("Config: {:#?}", config);
-            } else {
-                return;
-            }
-
-            let response = app.fetch_all();
-            match response {
-                Ok(body) => {
-                    if let Err(e) = app.parse_xml(body) {
-                        println!("Error parsing XML: {:#?}", e);
-                        return;
-                    }
-                    if let Err(e) = app.screen_draw(options) {
-                        println!("Error drawing screen: {:#?}", e);
-                        return;
-                    }
-                }
-                Err(e) => {
-                    println!("Error: {:#?}", e);
-                }
-            }
+            app.run(options);
         }
     }
 }
