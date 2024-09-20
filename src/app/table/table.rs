@@ -133,15 +133,21 @@ impl Table {
             return formatted_text.to_string();
         }
 
+        let mut row_count = 0;  // 画面を埋め尽くさないよう長くても2行ぐらいにする
         for c in formatted_text.chars() {
             let char_size = UnicodeWidthStr::width_cjk(c.to_string().as_str()) as u16;
             let line_size = UnicodeWidthStr::width_cjk(line.as_str()) as u16;
 
             if line_size + char_size >= w {
+                if row_count >= 1 {
+                    break;
+                }
+
                 formatted_tmp_text.push_str(&line);
                 formatted_tmp_text.push('\n');
                 line.clear();
                 line.push_str("    | ");
+                row_count += 1;
             }
 
             line.push(c);
