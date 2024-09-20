@@ -9,9 +9,9 @@ pub enum EntityType {
 #[derive(Debug)]
 pub struct Entity {
     pub entity_type: EntityType,
-    pub title: Option<String>,
-    pub link: Option<String>,
-    pub description: Option<String>,
+    pub title: String,
+    pub link: String,
+    pub description: String,
     pub pub_date: Option<String>,
 }
 
@@ -19,31 +19,18 @@ impl Entity {
     pub fn new(entity_type: EntityType) -> Self {
         Entity {
             entity_type,
-            title: None,
-            link: None,
-            description: None,
+            title: String::new(),
+            link: String::new(),
+            description: String::new(),
             pub_date: None,
         }
     }
 
-    pub fn set_rds(&mut self, item: &Item) {
-        self.title = item.title.clone();
-        self.link = item.link.field.clone();
-        self.description = item.description.clone();
-    }
-
-    pub fn set_rss(&mut self, item: &Item) {
-        self.title = item.title.clone();
-        self.link = item.link.field.clone();
-        self.description = item.description.clone();
-        self.pub_date = item.pub_date.clone();
-    }
-
-    pub fn set_atom(&mut self, item: &Item) {
-        self.title = item.title.clone();
-        self.link = item.link.href.clone();
-        self.description = item.summary.clone();
-        self.pub_date = item.pub_date.clone();
+    pub fn set_fields(&mut self, title: String, link: Link, description: String, pub_date: Option<String>) {
+        self.title = title;
+        self.link = link.field.unwrap_or_else(|| "".to_string());
+        self.description = description;
+        self.pub_date = pub_date;
     }
 }
 

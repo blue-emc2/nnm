@@ -1,27 +1,33 @@
 use crate::app::entity::{Atom, Entity, EntityType, Rdf, Rss};
 use quick_xml::{events::Event, name::QName, Reader};
+use regex::Regex;
 
 pub struct Parser {
-    // Add your fields here
+    re: Regex,
 }
 
 impl Parser {
     pub fn new() -> Self {
         Parser {
-            // Add your fields here
+            re: Regex::new(r"<[^>]*>").unwrap()
         }
     }
 
     pub fn parse(&self, body: String) -> Result<Vec<Entity>, quick_xml::Error> {
         let mut buf = Vec::new();
-        let entity_type = self.get_rss_feed_type(&body);
+        let decoded_body = html_escape::decode_html_entities(&body).to_string();
+        let entity_type = self.get_rss_feed_type(&decoded_body);
 
         match entity_type {
             EntityType::Rss => {
                 let rss: Rss = quick_xml::de::from_str(&body).unwrap();
                 rss.channel.item.iter().for_each(|item| {
                     let mut entity = Entity::new(EntityType::Rss);
-                    entity.set_rss(item);
+                    entity.set_fields(
+                        item.title.clone().unwrap_or_else(|| "".to_string()),
+                        item.link.clone(),
+                        self.clean_string(item.description.as_ref()),
+                        None);
                     buf.push(entity);
                 });
 
@@ -31,7 +37,11 @@ impl Parser {
                 let rdf: Rdf = quick_xml::de::from_str(&body).unwrap();
                 rdf.item.iter().for_each(|item| {
                     let mut entity = Entity::new(EntityType::Rdf);
-                    entity.set_rds(item);
+                    entity.set_fields(
+                        item.title.clone().unwrap_or_else(|| "".to_string()),
+                        item.link.clone(),
+                        self.clean_string(item.description.as_ref()),
+                        item.pub_date.clone());
                     buf.push(entity);
                 });
 
@@ -41,7 +51,12 @@ impl Parser {
                 let atom: Atom = quick_xml::de::from_str(&body).unwrap();
                 atom.entry.iter().for_each(|item| {
                     let mut entity = Entity::new(EntityType::Atom);
-                    entity.set_atom(item);
+                    entity.set_fields(
+                        item.title.clone().unwrap_or_else(|| "".to_string()),
+                        item.link.clone(),
+                        self.clean_string(item.summary.as_ref()),
+                        item.pub_date.clone()
+                    );
                     buf.push(entity);
                 });
 
@@ -75,6 +90,18 @@ impl Parser {
                 _ => (),
             }
         }
+    }
+
+    fn clean_string(&self, body: Option<&String>) -> String {
+        if body.is_none() {
+            return "".to_string();
+        }
+        let tmp = self.re.replace_all(body.as_deref().unwrap(), "").to_string();
+        let tmp = tmp.replace("\n", "")
+            .replace("\r", "")
+            .replace("\t", "")
+            .replace(" ", "");
+        tmp
     }
 }
 
@@ -115,29 +142,29 @@ mod tests {
         assert_eq!(result.len(), 2);
 
         assert_eq!(
-            result.get(0).unwrap().title.as_deref(),
-            Some("Example title")
+            result.get(0).unwrap().title,
+            "Example title"
         );
         assert_eq!(
-            result.get(0).unwrap().link.as_deref(),
-            Some("https://example.com")
+            result.get(0).unwrap().link,
+            "https://example.com"
         );
         assert_eq!(
-            result.get(0).unwrap().description.as_deref(),
-            Some("Example description")
+            result.get(0).unwrap().description,
+            "Example description"
         );
 
         assert_eq!(
-            result.get(1).unwrap().title.as_deref(),
-            Some("Example title2")
+            result.get(1).unwrap().title,
+            "Example title2"
         );
         assert_eq!(
-            result.get(1).unwrap().link.as_deref(),
-            Some("https://example.com2")
+            result.get(1).unwrap().link,
+            "https://example.com2"
         );
         assert_eq!(
-            result.get(1).unwrap().description.as_deref(),
-            Some("Example description2")
+            result.get(1).unwrap().description,
+            "Example description2"
         );
     }
 
@@ -171,29 +198,29 @@ mod tests {
         assert!(result.len() == 2);
 
         assert_eq!(
-            result.get(0).unwrap().title.as_deref(),
-            Some("Example title 1")
+            result.get(0).unwrap().title,
+            "Example title 1"
         );
         assert_eq!(
-            result.get(0).unwrap().link.as_deref(),
-            Some("https://example1.com")
+            result.get(0).unwrap().link,
+            "https://example1.com"
         );
         assert_eq!(
-            result.get(0).unwrap().description.as_deref(),
-            Some("Example description 1")
+            result.get(0).unwrap().description,
+            "Example description 1"
         );
 
         assert_eq!(
-            result.get(1).unwrap().title.as_deref(),
-            Some("Example title 2")
+            result.get(1).unwrap().title,
+            "Example title 2"
         );
         assert_eq!(
-            result.get(1).unwrap().link.as_deref(),
-            Some("https://example2.com")
+            result.get(1).unwrap().link,
+            "https://example2.com"
         );
         assert_eq!(
-            result.get(1).unwrap().description.as_deref(),
-            Some("Example description 2")
+            result.get(1).unwrap().description,
+            "Example description 2"
         );
     }
 
@@ -225,29 +252,29 @@ mod tests {
         assert!(result.len() == 2);
 
         assert_eq!(
-            result.get(0).unwrap().title.as_deref(),
-            Some("Example title 1")
+            result.get(0).unwrap().title,
+            "Example title 1"
         );
         assert_eq!(
-            result.get(0).unwrap().link.as_deref(),
-            Some("https://example1.com")
+            result.get(0).unwrap().link,
+            "https://example1.com"
         );
         assert_eq!(
-            result.get(0).unwrap().description.as_deref(),
-            Some("Example description 1")
+            result.get(0).unwrap().description,
+            "Example description 1"
         );
 
         assert_eq!(
-            result.get(1).unwrap().title.as_deref(),
-            Some("Example title 2")
+            result.get(1).unwrap().title,
+            "Example title 2"
         );
         assert_eq!(
-            result.get(1).unwrap().link.as_deref(),
-            Some("https://example2.com")
+            result.get(1).unwrap().link,
+            "https://example2.com"
         );
         assert_eq!(
-            result.get(1).unwrap().description.as_deref(),
-            Some("Example description 2")
+            result.get(1).unwrap().description,
+            "Example description 2"
         );
     }
 }

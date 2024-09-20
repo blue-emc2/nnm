@@ -20,9 +20,9 @@ impl Screen {
             .set_header(header)
             .set_draw_options(options);
         for entity in entities.iter() {
-            let title = entity.title.clone().unwrap_or_default();
-            let description = entity.description.clone().unwrap_or_default();
-            let link = entity.link.clone().unwrap_or_default();
+            let title = entity.title.clone();
+            let description = entity.description.clone();
+            let link = entity.link.clone();
 
             let row = Row::from(vec![title, description, link]);
             table.add_row(row);
