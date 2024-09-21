@@ -60,7 +60,6 @@ impl Table {
         let mut lines: Vec<String> = Vec::new();
         let header = self.header.as_ref();
         let rows = &self.rows;
-        let line_limit: usize = self.options.get("head").and_then(|v| v.parse().ok()).unwrap_or(10);
 
         // [
         //    No,""
@@ -99,10 +98,6 @@ impl Table {
             }
 
             lines.push(border.clone());
-
-            if row_index >= line_limit {
-                break;
-            }
         }
 
         lines.into_iter()

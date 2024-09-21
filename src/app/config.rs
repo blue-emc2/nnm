@@ -8,6 +8,7 @@ const DEFAULT_DISPLAY_LIMIT: i32 = 10;
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     display_limit: i32,
+    chunk_size: i32,
     bookmarks: Vec<String>, // お気に入り一覧
     links: Vec<String>,     // rssのリンク一覧
 }
@@ -15,6 +16,7 @@ pub struct Config {
 impl Config {
     pub fn new() -> Self {
         Config {
+            chunk_size: 10,
             bookmarks: Vec::new(),
             links: Vec::new(),
             display_limit: DEFAULT_DISPLAY_LIMIT,
@@ -23,6 +25,10 @@ impl Config {
 
     pub fn links(&self) -> Vec<String> {
         self.links.clone()
+    }
+
+    pub fn chunk_size(&self) -> i32 {
+        self.chunk_size
     }
 
     pub fn default_config_path() -> PathBuf {

@@ -31,20 +31,26 @@ impl App {
     }
 
     pub fn run(&mut self, options: HashMap<String, String>) {
-        let config = self.load_config();
-        if config.is_none() {
+        let Some(config) = self.load_config() else {
+            eprintln!("設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。");
             return;
-        }
+        };
 
-        let links = config.unwrap().links();
+        let links = config.links();
         let rt = Runtime::new().unwrap();
 
         let results = rt.block_on(async {
             let tasks = links.into_iter().map(|link| {
                 tokio::spawn(async move {
-                    println!("- start fetch task {} : {:?}", link, std::thread::current().id());
+                    #[cfg(debug_assertions)]
+                    {
+                        println!("- start fetch task {} : {:?}", link, std::thread::current().id());
+                    }
                     let res = Self::fetch_rss(link.clone()).await;
-                    println!("- end fetch task {:?} : {:?}", link, std::thread::current().id());
+                    #[cfg(debug_assertions)]
+                    {
+                        println!("- end fetch task {} : {:?}", link, std::thread::current().id());
+                    }
                     res
                 })
             }).collect::<Vec<_>>();
@@ -59,7 +65,7 @@ impl App {
             fetched_data
         });
 
-        if let Err(e) = self.parse_xml(results) {
+        if let Err(e) = self.parse_xml(results, config) {
             println!("Error parsing XML: {:#?}", e);
             return;
         }
@@ -84,14 +90,16 @@ impl App {
         Ok(body)
     }
 
-    pub fn parse_xml(&mut self, bodys: Vec<String>) -> Result<(), quick_xml::Error> {
+    pub fn parse_xml(&mut self, bodys: Vec<String>, config: Config) -> Result<(), quick_xml::Error> {
         let parser = Parser::new();
+        let chunk_size = config.chunk_size();
 
         for body in bodys {
             let ret = parser.parse(body);
             match ret {
-                Ok(mut entities) => {
-                    self.entities.append(&mut entities);
+                Ok(entities) => {
+                    let mut chunks = entities.into_iter().take(chunk_size.try_into().unwrap()).collect();
+                    self.entities.append(&mut chunks);
                 }
                 Err(e) => {
                     println!("{:?}", e);
@@ -137,15 +145,22 @@ impl App {
         let exists = Config::default_config_path().try_exists();
         match exists {
             Ok(true) => {
-                let config = Config::load_from_file().unwrap();
-                Some(config)
+                match Config::load_from_file() {
+                    Ok(config) => {
+                        return Some(config);
+                    }
+                    Err(e) => {
+                        eprintln!("エラーが発生しました: {}", e);
+                        return None;
+                    }
+                }
             }
             Ok(false) => {
                 println!("設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。");
                 None
             }
             Err(e) => {
-                println!("{:?}", e);
+                println!("load_config: {:?}", e);
                 None
             }
         }
