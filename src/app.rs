@@ -6,7 +6,7 @@ mod config;
 
 use tokio::runtime::Runtime;
 use std::collections::HashMap;
-use std::env;
+use std::{env, io};
 use std::fs::File;
 use std::path::PathBuf;
 use std::result::Result;
@@ -179,5 +179,55 @@ impl App {
                 Err(e)
             }
         }
+    }
+
+    pub fn delete_link_prompt(&self) {
+        println!("削除したいURLまたは番号を入力してください。");
+        println!("q, quit, exit で終了します。");
+        let config = Config::load_from_file().unwrap();
+        let links = config.links();
+        let link_itretor = links.iter().enumerate();
+        for (i, link) in link_itretor {
+            println!("{}: {}", i, link);
+        }
+
+        loop {
+            print!("> ");
+            io::stdout().flush().unwrap();
+
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap();
+            let input = input.trim();
+            if input == "q" || input == "quit" || input == "exit" {
+                break;
+            }
+
+            format!("入力された内容: {}", input);
+
+            if let Ok(index) = input.parse::<usize>() {
+                if index < links.len() {
+                    let url = &links[index];
+                    self.delete_link(url);
+                    println!("URLを削除しました: {}", url);
+                    break;
+                } else {
+                    println!("無効な番号です。もう一度入力してください。");
+                }
+            } else {
+                // 入力がURLの場合
+                if links.contains(&input.to_string()) {
+                    self.delete_link(input);
+                    println!("URLを削除しました: {}", input);
+                    break;
+                } else {
+                    println!("URLが見つかりません。もう一度入力してください。");
+                }
+            }
+        }
+    }
+
+    pub fn delete_link(&self, url: &str) {
+        let mut config = Config::load_from_file().unwrap();
+        let _result = config.delete_link(url);
     }
 }

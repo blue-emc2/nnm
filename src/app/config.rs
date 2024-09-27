@@ -52,6 +52,14 @@ impl Config {
         Ok(url.to_string())
     }
 
+    pub fn delete_link(&mut self, url: &str) -> Result<String, std::io::Error> {
+        if let Some(index) = self.links.iter().position(|x| x == url) {
+            self.links.remove(index);
+            self.save_to_file()?;
+        }
+        Ok(url.to_string())
+    }
+
     fn save_to_file(&self) -> Result<(), std::io::Error> {
         let path = Config::default_config_path();
         let config_json = serde_json::to_string_pretty(&self)?;

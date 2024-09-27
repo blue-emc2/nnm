@@ -22,6 +22,9 @@ enum Commands {
     Add {
         url: String,
     },
+    Delete {
+        url: Option<String>,
+    },
 }
 
 fn main() {
@@ -51,6 +54,11 @@ fn main() {
                 Err(e) => {
                     println!("Error: {:#?}", e);
                 }
+            }
+        }
+        Some(Commands::Delete { url }) => {
+            if url.is_none() {
+                app.delete_link_prompt();
             }
         }
         None => {
