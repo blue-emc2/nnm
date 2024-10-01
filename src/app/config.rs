@@ -27,6 +27,10 @@ impl Config {
         self.links.clone()
     }
 
+    pub fn bookmarks(&self) -> Vec<String> {
+        self.bookmarks.clone()
+    }
+
     pub fn chunk_size(&self) -> i32 {
         self.chunk_size
     }
@@ -47,6 +51,14 @@ impl Config {
     pub fn push_link(&mut self, url: &str) -> Result<String, std::io::Error> {
         if !self.links.contains(&url.to_string()) {
             self.links.push(url.to_string());
+            self.save_to_file()?;
+        }
+        Ok(url.to_string())
+    }
+
+    pub fn push_bookmark(&mut self, url: &str) -> Result<String, std::io::Error> {
+        if !self.bookmarks.contains(&url.to_string()) {
+            self.bookmarks.push(url.to_string());
             self.save_to_file()?;
         }
         Ok(url.to_string())

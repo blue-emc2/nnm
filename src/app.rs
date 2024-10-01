@@ -181,6 +181,29 @@ impl App {
         }
     }
 
+    pub fn add_link_to_bookmarks(&self, url: &str) -> Result<String, std::io::Error> {
+        let mut config = Config::load_from_file()?;
+        let ret = config.push_bookmark(url);
+
+        match ret {
+            Ok(url) => {
+                Ok(url)
+            }
+            Err(e) => {
+                println!("{:?}", e);
+                Err(e)
+            }
+        }
+    }
+
+    pub fn show_bookmarks(&self) {
+        let config = Config::load_from_file().unwrap();
+        let bookmarks = config.bookmarks();
+        for bookmark in bookmarks {
+            println!("{}", bookmark);
+        }
+    }
+
     pub fn delete_link_prompt(&self) {
         println!("削除したいURLまたは番号を入力してください。");
         println!("q, quit, exit で終了します。");
