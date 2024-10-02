@@ -11,6 +11,7 @@ pub struct Config {
     chunk_size: i32,
     bookmarks: Vec<String>, // お気に入り一覧
     links: Vec<String>,     // rssのリンク一覧
+    history_expiaration: i32,   // 履歴の保持期間(日)
 }
 
 impl Config {
@@ -20,6 +21,7 @@ impl Config {
             bookmarks: Vec::new(),
             links: Vec::new(),
             display_limit: DEFAULT_DISPLAY_LIMIT,
+            history_expiaration: 90,
         }
     }
 
