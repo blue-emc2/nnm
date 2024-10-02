@@ -156,7 +156,6 @@ impl App {
                 }
             }
             Ok(false) => {
-                println!("設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。");
                 None
             }
             Err(e) => {
