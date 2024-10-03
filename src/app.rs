@@ -3,7 +3,9 @@ mod entity;
 mod parser;
 mod table;
 mod config;
+mod history;
 
+use history::History;
 use tokio::runtime::Runtime;
 use std::collections::HashMap;
 use std::{env, io};
@@ -137,6 +139,11 @@ impl App {
 
         let mut file = File::create(config_file_path.clone())?;
         write!(file, "{}", config_json)?;
+
+        let history = History::new();
+        let history_json = serde_json::to_string_pretty(&history)?;
+        let mut file = File::create(config_dir.join("history.json"))?;
+        write!(file, "{}", history_json)?;
 
         Ok(config_file_path.into_os_string().into_string().unwrap())
     }
