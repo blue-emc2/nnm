@@ -1,10 +1,8 @@
-use std::path::PathBuf;
-
-use serde::{Deserialize, Serialize};
-
 use crate::app::Entity;
-
+use std::path::PathBuf;
+use serde::{Deserialize, Serialize};
 use super::file::File;
+use chrono::Local;
 
 #[derive(Debug, Clone)]
 #[derive(Serialize, Deserialize)]
@@ -30,5 +28,12 @@ impl History {
         }
     }
 
-    // メソッドをここに追加
+    pub fn update_last_fetched_date(&mut self) {
+        let now = Local::now();
+        self.last_fetched_date = now.format("%Y-%m-%d %H:%M:%S").to_string();
+    }
+
+    pub fn entity_push(&mut self, entity: Entity) {
+        self.entity.push(entity);
+    }
 }

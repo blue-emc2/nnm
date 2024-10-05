@@ -68,7 +68,7 @@ impl App {
             fetched_data
         });
 
-        if let Err(e) = self.parse_xml(results.clone(), config) {
+        if let Err(e) = self.parse_xml(results, config) {
             println!("Error parsing XML: {:#?}", e);
             return;
         }
@@ -76,7 +76,7 @@ impl App {
             println!("Error drawing screen: {:#?}", e);
             return;
         }
-        if let Err(e) = self.save_history(results.clone()) {
+        if let Err(e) = self.save_history() {
             println!("Error saving history: {:#?}", e);
             return;
         }
@@ -139,7 +139,11 @@ impl App {
         }
 
         let config_file_path = config_dir.join("config.json");
-        let config = Config::new();
+        let mut config = Config::new();
+        #[cfg(debug_assertions)]
+        {
+            config.push_link("https://www.ruby-lang.org/ja/feeds/news.rss").unwrap();
+        }
         config.save_to_file(config.clone())?;
 
         let history = History::new();
@@ -239,11 +243,22 @@ impl App {
         let _result = load_config.delete_link(url);
     }
 
-    pub fn save_history(&self, bodys: Vec<String>) -> Result<(), std::io::Error> {
+    pub fn save_history(&self) -> Result<(), std::io::Error> {
         let h = History::new();
         let mut history: History = h.load_from_file().unwrap();
-        for body in bodys {
+        for body in self.entities.iter() {
+            let entity = Entity {
+                entity_type: body.entity_type.clone(),
+                title: body.title.clone(),
+                link: body.link.clone(),
+                description: "".to_string(),
+                pub_date: None,
+            };
+            history.entity_push(entity);
         }
+
+        history.update_last_fetched_date();
+        history.save_to_file(history.clone())?;
 
         Ok(())
     }
