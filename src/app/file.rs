@@ -13,7 +13,7 @@ pub trait File {
         Ok(())
     }
 
-    fn load_from_file<T: for<'de> Deserialize<'de>>(&self) -> std::io::Result<T> {
+    fn load_from_file<T: for<'de> Deserialize<'de>>(&self) -> io::Result<T> {
         let path = self.file_path();
         let config = serde_json::from_str(&fs::read_to_string(path)?)?;
         Ok(config)

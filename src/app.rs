@@ -244,22 +244,32 @@ impl App {
     }
 
     pub fn save_history(&self) -> Result<(), std::io::Error> {
-        let h = History::new();
-        let mut history: History = h.load_from_file().unwrap();
-        for body in self.entities.iter() {
-            let entity = Entity {
-                entity_type: body.entity_type.clone(),
-                title: body.title.clone(),
-                link: body.link.clone(),
-                description: "".to_string(),
-                pub_date: None,
-            };
-            history.entity_push(entity);
+        let history: Result<History, io::Error> = History::new().load_from_file();
+
+        match history {
+            Ok(mut history) => {
+                for body in self.entities.iter() {
+                    let entity = Entity {
+                        entity_type: body.entity_type.clone(),
+                        title: body.title.clone(),
+                        link: body.link.clone(),
+                        description: "".to_string(),
+                        pub_date: None,
+                    };
+                    history.entity_push(entity);
+                }
+
+                history.update_last_fetched_date();
+                history.save_to_file(history.clone())?;
+
+                Ok(())
+            }
+            Err(e   ) => {
+                eprintln!("履歴ファイルが見つかりませんでした。\nhistory.jsonを再作成します。");
+                let history = History::new();
+                history.save_to_file(history.clone())?;
+                Err(e)
+            }
         }
-
-        history.update_last_fetched_date();
-        history.save_to_file(history.clone())?;
-
-        Ok(())
     }
 }
