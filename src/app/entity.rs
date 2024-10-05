@@ -1,4 +1,6 @@
-#[derive(Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EntityType {
     Rdf, // RSS 1.0のこと
     Rss,
@@ -6,7 +8,7 @@ pub enum EntityType {
     Unknown,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Entity {
     pub entity_type: EntityType,
     pub title: String,
@@ -33,8 +35,6 @@ impl Entity {
         self.pub_date = pub_date;
     }
 }
-
-use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Link {

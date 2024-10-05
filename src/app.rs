@@ -4,12 +4,13 @@ mod parser;
 mod table;
 mod config;
 mod history;
+mod file;
 
+use file::File;
 use history::History;
 use tokio::runtime::Runtime;
 use std::collections::HashMap;
 use std::{env, io};
-use std::fs::File;
 use std::path::PathBuf;
 use std::result::Result;
 use std::io::Write;
@@ -67,12 +68,16 @@ impl App {
             fetched_data
         });
 
-        if let Err(e) = self.parse_xml(results, config) {
+        if let Err(e) = self.parse_xml(results.clone(), config) {
             println!("Error parsing XML: {:#?}", e);
             return;
         }
         if let Err(e) = self.screen_draw(options) {
             println!("Error drawing screen: {:#?}", e);
+            return;
+        }
+        if let Err(e) = self.save_history(results.clone()) {
+            println!("Error saving history: {:#?}", e);
             return;
         }
     }
@@ -135,24 +140,20 @@ impl App {
 
         let config_file_path = config_dir.join("config.json");
         let config = Config::new();
-        let config_json = serde_json::to_string_pretty(&config)?;
-
-        let mut file = File::create(config_file_path.clone())?;
-        write!(file, "{}", config_json)?;
+        config.save_to_file(config.clone())?;
 
         let history = History::new();
-        let history_json = serde_json::to_string_pretty(&history)?;
-        let mut file = File::create(config_dir.join("history.json"))?;
-        write!(file, "{}", history_json)?;
+        history.save_to_file(history.clone())?;
 
         Ok(config_file_path.into_os_string().into_string().unwrap())
     }
 
     pub fn load_config(&self) -> Option<Config> {
-        let exists = Config::default_config_path().try_exists();
+        let config = Config::new();
+        let exists = config.default_file_path().try_exists();
         match exists {
             Ok(true) => {
-                match Config::load_from_file() {
+                match config.load_from_file() {
                     Ok(config) => {
                         return Some(config);
                     }
@@ -173,7 +174,7 @@ impl App {
     }
 
     pub fn add_link(&self, url: &str) -> Result<String, std::io::Error> {
-        let mut config = Config::load_from_file()?;
+        let mut config: Config = Config::new().load_from_file().unwrap();
         let ret = config.push_link(url);
 
         match ret {
@@ -190,7 +191,7 @@ impl App {
     pub fn delete_link_prompt(&self) {
         println!("削除したいURLまたは番号を入力してください。");
         println!("q, quit, exit で終了します。");
-        let config = Config::load_from_file().unwrap();
+        let config: Config = Config::new().load_from_file().unwrap();
         let links = config.links();
         let link_itretor = links.iter().enumerate();
         for (i, link) in link_itretor {
@@ -233,7 +234,17 @@ impl App {
     }
 
     pub fn delete_link(&self, url: &str) {
-        let mut config = Config::load_from_file().unwrap();
-        let _result = config.delete_link(url);
+        let config = Config::new();
+        let mut load_config: Config = config.load_from_file().unwrap();
+        let _result = load_config.delete_link(url);
+    }
+
+    pub fn save_history(&self, bodys: Vec<String>) -> Result<(), std::io::Error> {
+        let h = History::new();
+        let mut history: History = h.load_from_file().unwrap();
+        for body in bodys {
+        }
+
+        Ok(())
     }
 }
