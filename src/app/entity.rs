@@ -56,7 +56,7 @@ pub struct Item {
 
 #[derive(Debug, Deserialize)]
 pub struct Rdf {
-    channel: RdfChannel,
+    _channel: RdfChannel,
     pub item: Vec<Item>,
 }
 
