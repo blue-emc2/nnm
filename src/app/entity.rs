@@ -1,4 +1,6 @@
-#[derive(Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EntityType {
     Rdf, // RSS 1.0のこと
     Rss,
@@ -6,7 +8,7 @@ pub enum EntityType {
     Unknown,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Entity {
     pub entity_type: EntityType,
     pub title: String,
@@ -28,13 +30,11 @@ impl Entity {
 
     pub fn set_fields(&mut self, title: String, link: Link, description: String, pub_date: Option<String>) {
         self.title = title;
-        self.link = link.field.unwrap_or_else(|| "".to_string());
+        self.link = link.get_link();
         self.description = description;
         self.pub_date = pub_date;
     }
 }
-
-use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Link {
@@ -42,6 +42,12 @@ pub struct Link {
     pub href: Option<String>,
     #[serde(rename = "$value")]
     pub field: Option<String>,
+}
+
+impl Link {
+    pub fn get_link(&self) -> String {
+        self.href.clone().unwrap_or_else(|| self.field.clone().unwrap_or_else(|| "".to_string()))
+    }
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -56,7 +62,7 @@ pub struct Item {
 
 #[derive(Debug, Deserialize)]
 pub struct Rdf {
-    channel: RdfChannel,
+    _channel: RdfChannel,
     pub item: Vec<Item>,
 }
 

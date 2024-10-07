@@ -28,6 +28,7 @@ enum Commands {
     Bookmark {
         url: Option<String>,
     },
+    History
 }
 
 fn main() {
@@ -77,6 +78,9 @@ fn main() {
             } else {
                 app.show_bookmarks();
             }
+        },
+        Some(Commands::History) => {
+            app.show_history();
         }
         None => {
             app.run(options);

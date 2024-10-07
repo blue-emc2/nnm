@@ -40,3 +40,13 @@ nnm delete [URL]
 
 RSSリストからURLを削除します。
 URL未指定の場合、インタラクティブモードが起動します。
+
+### `nnm history`
+
+```bash
+nnm history
+nnm -h
+```
+
+過去に閲覧したコンテンツを表示します。
+履歴の保存期間は [設定ファイル](CONFIG.md)の `history_expiration_day` に設定した値です。

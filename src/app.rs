@@ -3,11 +3,14 @@ mod entity;
 mod parser;
 mod table;
 mod config;
+mod history;
+mod file;
 
+use file::File;
+use history::History;
 use tokio::runtime::Runtime;
 use std::collections::HashMap;
 use std::{env, io};
-use std::fs::File;
 use std::path::PathBuf;
 use std::result::Result;
 use std::io::Write;
@@ -69,8 +72,19 @@ impl App {
             println!("Error parsing XML: {:#?}", e);
             return;
         }
-        if let Err(e) = self.screen_draw(options) {
-            println!("Error drawing screen: {:#?}", e);
+
+        // 新しい記事のみを表示するためにここでフィルタリングするが、
+        // filter_new_entitiesを常に呼ばないといけないのでなんだかいけてない
+        let new_entity_size = self.filter_new_entities();
+        if new_entity_size == 0 {
+            println!("新しい記事はありません。");
+            return;
+        } else {
+            self.screen_draw(options);
+        }
+
+        if let Err(e) = self.save_history() {
+            println!("Error saving history: {:#?}", e);
             return;
         }
     }
@@ -111,15 +125,8 @@ impl App {
         Ok(())
     }
 
-    pub fn screen_draw(&mut self, options: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
-        let ret = self.screen.draw(&self.entities, options);
-        match ret {
-            Ok(_) => Ok(()),
-            Err(e) => {
-                println!("{:?}", e);
-                Err(e)
-            }
-        }
+    pub fn screen_draw(&mut self, options: HashMap<String, String>) {
+        self.screen.draw(&self.entities, options);
     }
 
     pub fn init_config(&self) -> Result<String, std::io::Error> {
@@ -132,20 +139,25 @@ impl App {
         }
 
         let config_file_path = config_dir.join("config.json");
-        let config = Config::new();
-        let config_json = serde_json::to_string_pretty(&config)?;
+        let mut config = Config::new();
+        #[cfg(debug_assertions)]
+        {
+            config.push_link("https://www.ruby-lang.org/ja/feeds/news.rss").unwrap();
+        }
+        config.save_to_file(config.clone())?;
 
-        let mut file = File::create(config_file_path.clone())?;
-        write!(file, "{}", config_json)?;
+        let history = History::new();
+        history.save_to_file(history.clone())?;
 
         Ok(config_file_path.into_os_string().into_string().unwrap())
     }
 
     pub fn load_config(&self) -> Option<Config> {
-        let exists = Config::default_config_path().try_exists();
+        let config = Config::new();
+        let exists = config.default_file_path().try_exists();
         match exists {
             Ok(true) => {
-                match Config::load_from_file() {
+                match config.load_from_file() {
                     Ok(config) => {
                         return Some(config);
                     }
@@ -156,7 +168,6 @@ impl App {
                 }
             }
             Ok(false) => {
-                println!("設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。");
                 None
             }
             Err(e) => {
@@ -167,7 +178,7 @@ impl App {
     }
 
     pub fn add_link(&self, url: &str) -> Result<String, std::io::Error> {
-        let mut config = Config::load_from_file()?;
+        let mut config: Config = Config::new().load_from_file().unwrap();
         let ret = config.push_link(url);
 
         match ret {
@@ -207,7 +218,7 @@ impl App {
     pub fn delete_link_prompt(&self) {
         println!("削除したいURLまたは番号を入力してください。");
         println!("q, quit, exit で終了します。");
-        let config = Config::load_from_file().unwrap();
+        let config: Config = Config::new().load_from_file().unwrap();
         let links = config.links();
         let link_itretor = links.iter().enumerate();
         for (i, link) in link_itretor {
@@ -250,7 +261,71 @@ impl App {
     }
 
     pub fn delete_link(&self, url: &str) {
-        let mut config = Config::load_from_file().unwrap();
-        let _result = config.delete_link(url);
+        let config = Config::new();
+        let mut load_config: Config = config.load_from_file().unwrap();
+        let _result = load_config.delete_link(url);
+    }
+
+    pub fn show_history(&self) {
+        let history: Result<History, io::Error> = History::new().load_from_file();
+        match history {
+            Ok(history) => {
+                let entities = history.get_entities();
+                self.screen.draw(&entities, HashMap::new());
+            }
+            Err(e) => {
+                eprintln!("Error loading history: {:?}", e);
+            }
+        }
+    }
+
+    fn save_history(&self) -> Result<(), std::io::Error> {
+        let history: Result<History, io::Error> = History::new().load_from_file();
+
+        match history {
+            Ok(mut history) => {
+                for body in self.entities.iter() {
+                    let entity = Entity {
+                        entity_type: body.entity_type.clone(),
+                        title: body.title.clone(),
+                        link: body.link.clone(),
+                        description: "".to_string(),
+                        pub_date: None,
+                    };
+                    history.entity_push(entity);
+                }
+
+                history.update_last_fetched_date();
+                history.save_to_file(history.clone())?;
+
+                Ok(())
+            }
+            Err(e   ) => {
+                eprintln!("履歴ファイルが見つかりませんでした。\nhistory.jsonを再作成します。");
+                let history = History::new();
+                history.save_to_file(history.clone())?;
+                Err(e)
+            }
+        }
+    }
+
+    fn filter_new_entities(&mut self) -> u16 {
+        let history: Result<History, io::Error> = History::new().load_from_file();
+        match history {
+            Ok(history) => {
+                let mut new_entities: Vec<Entity> = Vec::new();
+                for body in self.entities.iter() {
+                    if !history.get_entities().iter().any(|h| h.link == body.link) {
+                        new_entities.push(body.clone());
+                    }
+                }
+                self.entities = new_entities;
+                self.entities.len() as u16
+            }
+            Err(e) => {
+                eprintln!("Error loading history: {:?}", e);
+                0
+            }
+        }
     }
 }
