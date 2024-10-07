@@ -192,26 +192,36 @@ impl App {
         }
     }
 
-    pub fn add_link_to_bookmarks(&self, url: &str) -> Result<String, std::io::Error> {
-        let mut config = Config::load_from_file()?;
-        let ret = config.push_bookmark(url);
-
-        match ret {
-            Ok(url) => {
-                Ok(url)
+    pub fn add_link_to_bookmarks(&self, url: &String) {
+        let config: Result<Config, io::Error> = Config::new().load_from_file();
+        match config {
+            Ok(mut config) => {
+                if let Err(e) = config.push_bookmark(url) {
+                    eprintln!("ブックマークの追加に失敗しました: {:?}", e);
+                } else {
+                    println!("{:?} をブックマークしました。", url);
+                }
             }
             Err(e) => {
-                println!("{:?}", e);
-                Err(e)
+                // TODO: ここのエラーは精査する必要がありそう
+                eprintln!("設定ファイルに異常が見つかりました。: {:?}", e);
             }
         }
     }
 
     pub fn show_bookmarks(&self) {
-        let config = Config::load_from_file().unwrap();
-        let bookmarks = config.bookmarks();
-        for bookmark in bookmarks {
-            println!("{}", bookmark);
+        let config: Result<Config, io::Error> = Config::new().load_from_file();
+        match config {
+            Ok(config) => {
+                let bookmarks = config.bookmarks();
+                for bookmark in bookmarks {
+                    println!("{}", bookmark);
+                }
+            }
+            Err(e) => {
+                // TODO: ここのエラーは精査する必要がありそう
+                eprintln!("設定ファイルに異常が見つかりました。: {:?}", e);
+            }
         }
     }
 

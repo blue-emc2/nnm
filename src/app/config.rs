@@ -60,12 +60,12 @@ impl Config {
         Ok(url.to_string())
     }
 
-    pub fn push_bookmark(&mut self, url: &str) -> Result<String, std::io::Error> {
+    pub fn push_bookmark(&mut self, url: &String) -> Result<(), std::io::Error> {
         if !self.bookmarks.contains(&url.to_string()) {
             self.bookmarks.push(url.to_string());
-            self.save_to_file()?;
+            self.save_to_file(self.clone())?;
         }
-        Ok(url.to_string())
+        Ok(())
     }
 
     pub fn delete_link(&mut self, url: &str) -> Result<String, std::io::Error> {

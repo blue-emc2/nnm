@@ -67,14 +67,7 @@ fn main() {
         }
         Some(Commands::Bookmark { url }) => {
             if let Some(url) = url {
-                match app.add_link_to_bookmarks(url) {
-                    Ok(url) => {
-                        println!("{} をブックマークしました。", url);
-                    }
-                    Err(e) => {
-                        println!("Error: {:#?}", e);
-                    }
-                }
+                app.add_link_to_bookmarks(url);
             } else {
                 app.show_bookmarks();
             }
