@@ -11,7 +11,7 @@ impl Screen {
         Screen {}
     }
 
-    pub fn draw(&self, entities: &Vec<entity::Entity>, options: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>>  {
+    pub fn draw(&self, entities: &Vec<entity::Entity>, options: HashMap<String, String>) {
         let (width, height) = crossterm::terminal::size().unwrap_or_else(|_| (80, 24));
         let mut table = Table::new();
         let header = Row::from(vec!["No".to_string(), "Body".to_string()]);
@@ -29,7 +29,5 @@ impl Screen {
         }
 
         println!("{}", table);
-
-        Ok(())
     }
 }

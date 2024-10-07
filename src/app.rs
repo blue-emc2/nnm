@@ -79,12 +79,10 @@ impl App {
         if new_entity_size == 0 {
             println!("新しい記事はありません。");
             return;
+        } else {
+            self.screen_draw(options);
         }
 
-        if let Err(e) = self.screen_draw(options) {
-            println!("Error drawing screen: {:#?}", e);
-            return;
-        }
         if let Err(e) = self.save_history() {
             println!("Error saving history: {:#?}", e);
             return;
@@ -127,15 +125,8 @@ impl App {
         Ok(())
     }
 
-    pub fn screen_draw(&mut self, options: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
-        let ret = self.screen.draw(&self.entities, options);
-        match ret {
-            Ok(_) => Ok(()),
-            Err(e) => {
-                println!("{:?}", e);
-                Err(e)
-            }
-        }
+    pub fn screen_draw(&mut self, options: HashMap<String, String>) {
+        self.screen.draw(&self.entities, options);
     }
 
     pub fn init_config(&self) -> Result<String, std::io::Error> {
@@ -250,6 +241,19 @@ impl App {
         let config = Config::new();
         let mut load_config: Config = config.load_from_file().unwrap();
         let _result = load_config.delete_link(url);
+    }
+
+    pub fn show_history(&self) {
+        let history: Result<History, io::Error> = History::new().load_from_file();
+        match history {
+            Ok(history) => {
+                let entities = history.get_entities();
+                self.screen.draw(&entities, HashMap::new());
+            }
+            Err(e) => {
+                eprintln!("Error loading history: {:?}", e);
+            }
+        }
     }
 
     fn save_history(&self) -> Result<(), std::io::Error> {

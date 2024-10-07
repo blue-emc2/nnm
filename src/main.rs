@@ -25,6 +25,7 @@ enum Commands {
     Delete {
         url: Option<String>,
     },
+    History
 }
 
 fn main() {
@@ -60,6 +61,9 @@ fn main() {
             if url.is_none() {
                 app.delete_link_prompt();
             }
+        }
+        Some(Commands::History) => {
+            app.show_history();
         }
         None => {
             app.run(options);
