@@ -72,6 +72,15 @@ impl App {
             println!("Error parsing XML: {:#?}", e);
             return;
         }
+
+        // 新しい記事のみを表示するためにここでフィルタリングするが、
+        // filter_new_entitiesを常に呼ばないといけないのでなんだかいけてない
+        let new_entity_size = self.filter_new_entities();
+        if new_entity_size == 0 {
+            println!("新しい記事はありません。");
+            return;
+        }
+
         if let Err(e) = self.screen_draw(options) {
             println!("Error drawing screen: {:#?}", e);
             return;
@@ -243,7 +252,7 @@ impl App {
         let _result = load_config.delete_link(url);
     }
 
-    pub fn save_history(&self) -> Result<(), std::io::Error> {
+    fn save_history(&self) -> Result<(), std::io::Error> {
         let history: Result<History, io::Error> = History::new().load_from_file();
 
         match history {
@@ -269,6 +278,26 @@ impl App {
                 let history = History::new();
                 history.save_to_file(history.clone())?;
                 Err(e)
+            }
+        }
+    }
+
+    fn filter_new_entities(&mut self) -> u16 {
+        let history: Result<History, io::Error> = History::new().load_from_file();
+        match history {
+            Ok(history) => {
+                let mut new_entities: Vec<Entity> = Vec::new();
+                for body in self.entities.iter() {
+                    if !history.get_entities().iter().any(|h| h.link == body.link) {
+                        new_entities.push(body.clone());
+                    }
+                }
+                self.entities = new_entities;
+                self.entities.len() as u16
+            }
+            Err(e) => {
+                eprintln!("Error loading history: {:?}", e);
+                0
             }
         }
     }

@@ -36,4 +36,9 @@ impl History {
     pub fn entity_push(&mut self, entity: Entity) {
         self.entity.push(entity);
     }
+
+    // TODO: iteratorを実装したほうかいい？いちいちコピーしたものを返すのは無駄かも
+    pub fn get_entities(&self) -> Vec<Entity> {
+        self.entity.clone()
+    }
 }
