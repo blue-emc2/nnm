@@ -177,7 +177,7 @@ impl App {
         }
     }
 
-    pub fn add_link(&self, url: &str) -> Result<String, std::io::Error> {
+    pub fn add_link(&self, url: &String) -> Result<String, std::io::Error> {
         let mut config: Config = Config::new().load_from_file().unwrap();
         let ret = config.push_link(url);
 
@@ -225,11 +225,21 @@ impl App {
         }
     }
 
-    pub fn delete_link_prompt(&self) {
-        println!("削除したいURLまたは番号を入力してください。");
-        println!("q, quit, exit で終了します。");
+    pub fn delete_prompt_for_rss(&self) {
         let config: Config = Config::new().load_from_file().unwrap();
         let links = config.links();
+        self.delete_link_prompt(links);
+    }
+
+    pub fn delete_prompt_for_bookmark(&self) {
+        let config: Config = Config::new().load_from_file().unwrap();
+        let bookmarks = config.bookmarks();
+        self.delete_link_prompt(bookmarks);
+    }
+
+    fn delete_link_prompt(&self, links: Vec<String>) {
+        println!("削除したいURLまたは番号を入力してください。");
+        println!("q, quit, exit で終了します。");
         let link_itretor = links.iter().enumerate();
         for (i, link) in link_itretor {
             println!("{}: {}", i, link);
