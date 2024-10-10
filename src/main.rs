@@ -9,6 +9,7 @@ use commands::{Actions, Commands};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
+#[clap(name = "nnm", version = "1.0", about = "コンソールで読むRSSリーダー")]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
