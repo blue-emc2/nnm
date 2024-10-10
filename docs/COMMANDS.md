@@ -14,14 +14,6 @@
 nnm init
 ```
 
-### `nnm add`
-
-RSSのURLを設定ファイルに登録します。
-
-```bash
-nnm add [URL]
-```
-
 ### `nnm`
 
 設定ファイルのRSSリストからコンテンツを取得しコンソールに表示します。
@@ -31,21 +23,49 @@ nnm add [URL]
 nnm
 ```
 
-### `nnm delete`
+### `nnm rss add`
 
 ```bash
-nnm delete
-nnm delete [URL]
+nnm rss add [URL]
+```
+
+RSSのURLを設定ファイルに登録します。
+
+### `nnm rss delete`
+
+```bash
+nnm rss delete
 ```
 
 RSSリストからURLを削除します。
-URL未指定の場合、インタラクティブモードが起動します。
+インタラクティブモードが起動します。
+
+### `nnm bookmark add`
+
+```bash
+nnm bookmark add [URL]
+```
+
+保存しておきたいURLをお気に入りリストに登録します。
+後述の`nnm bookmark`で登録一覧を確認できます。
+
+### `nnm bookmark delete`
+
+```bash
+nnm bookmark delete
+```
+
+お気に入りリストからURLを削除します。
+インタラクティブモードが起動します。
+
+### `nnm bookmark`
+
+お気に入りに保存した一覧を確認します。
 
 ### `nnm history`
 
 ```bash
 nnm history
-nnm -h
 ```
 
 過去に閲覧したコンテンツを表示します。

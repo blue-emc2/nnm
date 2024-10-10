@@ -1,12 +1,15 @@
 mod app;
+mod commands;
 
 use std::collections::HashMap;
 
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use app::App;
+use commands::{Actions, Commands};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
+#[clap(name = "nnm", version = "1.0", about = "コンソールで読むRSSリーダー")]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -14,21 +17,6 @@ struct Cli {
     /// A numeric option
     #[arg(short, long, default_value_t = 10)]
     number: i32,
-}
-
-#[derive(Subcommand, Debug)]
-enum Commands {
-    Init,
-    Add {
-        url: String,
-    },
-    Delete {
-        url: Option<String>,
-    },
-    Bookmark {
-        url: Option<String>,
-    },
-    History
 }
 
 fn main() {
@@ -50,33 +38,41 @@ fn main() {
                 }
             }
         }
-        Some(Commands::Add { url }) => {
-            match app.add_link(url) {
-                Ok(url) => {
-                    println!("{} を追加しました。", url);
-                }
-                Err(e) => {
-                    println!("Error: {:#?}", e);
-                }
-            }
-        }
-        Some(Commands::Delete { url }) => {
-            if url.is_none() {
-                app.delete_link_prompt();
-            }
-        }
-        Some(Commands::Bookmark { url }) => {
-            if let Some(url) = url {
-                match app.add_link_to_bookmarks(url) {
-                    Ok(url) => {
-                        println!("{} をブックマークしました。", url);
-                    }
-                    Err(e) => {
-                        println!("Error: {:#?}", e);
+        Some(Commands::Rss { action } ) => {
+            match action {
+                Some(Actions::Add { url }) => {
+                    if let Some(url) = url {
+                        match app.add_link(url) {
+                            Ok(url) => {
+                                println!("{} を追加しました。", url);
+                            }
+                            Err(e) => {
+                                println!("Error: {:#?}", e);
+                            }
+                        }
                     }
                 }
-            } else {
-                app.show_bookmarks();
+                Some(Actions::Delete) => {
+                    app.run_delete_prompt_rss();
+                }
+                None => {
+                    todo!();
+                }
+            }
+        },
+        Some(Commands::Bookmark { action} ) => {
+            match action {
+                Some(Actions::Add { url }) => {
+                    if let Some(url) = url {
+                        app.add_link_to_bookmarks(url);
+                    }
+                }
+                Some(Actions::Delete) => {
+                    app.run_delete_prompt_bookmark();
+                }
+                None => {
+                    app.show_bookmarks();
+                }
             }
         },
         Some(Commands::History) => {

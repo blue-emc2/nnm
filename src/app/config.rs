@@ -35,12 +35,12 @@ impl Config {
         }
     }
 
-    pub fn links(&self) -> Vec<String> {
-        self.links.clone()
+    pub fn links(&self) -> &Vec<String> {
+        self.links.as_ref()
     }
 
-    pub fn bookmarks(&self) -> Vec<String> {
-        self.bookmarks.clone()
+    pub fn bookmarks(&self) -> &Vec<String> {
+        self.bookmarks.as_ref()
     }
 
     pub fn chunk_size(&self) -> i32 {
@@ -52,6 +52,7 @@ impl Config {
         self.file_path()
     }
 
+    // ここらへんの関数が似ているのでなんとか整理したい
     pub fn push_link(&mut self, url: &str) -> Result<String, std::io::Error> {
         if !self.links.contains(&url.to_string()) {
             self.links.push(url.to_string());
@@ -60,17 +61,25 @@ impl Config {
         Ok(url.to_string())
     }
 
-    pub fn push_bookmark(&mut self, url: &str) -> Result<String, std::io::Error> {
+    pub fn push_bookmark(&mut self, url: &String) -> Result<(), std::io::Error> {
         if !self.bookmarks.contains(&url.to_string()) {
             self.bookmarks.push(url.to_string());
-            self.save_to_file()?;
+            self.save_to_file(self.clone())?;
+        }
+        Ok(())
+    }
+
+    pub fn delete_link_and_save(&mut self, url: &str) -> Result<String, std::io::Error> {
+        if let Some(index) = self.links.iter().position(|x| x == url) {
+            self.links.remove(index);
+            self.save_to_file(self.clone())?;
         }
         Ok(url.to_string())
     }
 
-    pub fn delete_link(&mut self, url: &str) -> Result<String, std::io::Error> {
-        if let Some(index) = self.links.iter().position(|x| x == url) {
-            self.links.remove(index);
+    pub fn delete_bookmark_and_save(&mut self, url: &str) -> Result<String, std::io::Error> {
+        if let Some(index) = self.bookmarks.iter().position(|x| x == url) {
+            self.bookmarks.remove(index);
             self.save_to_file(self.clone())?;
         }
         Ok(url.to_string())
