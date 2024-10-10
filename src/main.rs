@@ -52,7 +52,7 @@ fn main() {
                     }
                 }
                 Some(Actions::Delete) => {
-                    app.delete_prompt_for_rss();
+                    app.run_delete_prompt_rss();
                 }
                 None => {
                     todo!();
@@ -67,7 +67,7 @@ fn main() {
                     }
                 }
                 Some(Actions::Delete) => {
-                    app.delete_prompt_for_bookmark();
+                    app.run_delete_prompt_bookmark();
                 }
                 None => {
                     app.show_bookmarks();

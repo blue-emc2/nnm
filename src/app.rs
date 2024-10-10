@@ -34,12 +34,20 @@ impl App {
     }
 
     pub fn run(&mut self, options: HashMap<String, String>) {
-        let Some(config) = self.load_config() else {
+         if !self.is_config_exists() {
             eprintln!("設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。");
             return;
         };
 
-        let links = config.links();
+        let config: Config = match Config::new().load_from_file() {
+            Ok(config) => config,
+            Err(_) => {
+                eprintln!("設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。");
+                return;
+            }
+        };
+
+        let links = config.links().clone();
         let rt = Runtime::new().unwrap();
 
         let results = rt.block_on(async {
@@ -152,27 +160,15 @@ impl App {
         Ok(config_file_path.into_os_string().into_string().unwrap())
     }
 
-    pub fn load_config(&self) -> Option<Config> {
+    fn is_config_exists(&self) -> bool {
         let config = Config::new();
         let exists = config.default_file_path().try_exists();
         match exists {
-            Ok(true) => {
-                match config.load_from_file() {
-                    Ok(config) => {
-                        return Some(config);
-                    }
-                    Err(e) => {
-                        eprintln!("エラーが発生しました: {}", e);
-                        return None;
-                    }
-                }
-            }
-            Ok(false) => {
-                None
-            }
+            Ok(true) => true,
+            Ok(false) => false,
             Err(e) => {
                 println!("load_config: {:?}", e);
-                None
+                false
             }
         }
     }
@@ -225,24 +221,48 @@ impl App {
         }
     }
 
-    pub fn delete_prompt_for_rss(&self) {
-        let config: Config = Config::new().load_from_file().unwrap();
-        let links = config.links();
-        self.delete_link_prompt(links);
+    pub fn run_delete_prompt_rss(&self) {
+        self.run_delete_prompt(|config: &Config| {
+                config.links().clone()
+            }, |config: &mut Config, url: &str| {
+                match config.delete_link_and_save(&url) {
+                    Ok(_) => {
+                        println!("URLを削除しました: {}", url);
+                    }
+                    Err(e) => {
+                        println!("削除に失敗しました: {:?}", e);
+                    }
+                }
+            });
     }
 
-    pub fn delete_prompt_for_bookmark(&self) {
-        let config: Config = Config::new().load_from_file().unwrap();
-        let bookmarks = config.bookmarks();
-        self.delete_link_prompt(bookmarks);
+    pub fn run_delete_prompt_bookmark(&self) {
+        self.run_delete_prompt(|config: &Config| {
+                config.bookmarks().clone()
+            }, |config: &mut Config, url: &str| {
+                match config.delete_bookmark_and_save(&url) {
+                    Ok(_) => {
+                        println!("ブックマークを削除しました: {}", url);
+                    }
+                    Err(e) => {
+                        println!("削除に失敗しました: {:?}", e);
+                    }
+                }
+            });
     }
 
-    fn delete_link_prompt(&self, links: Vec<String>) {
+    // 無理矢理感がすごいのでリファクタリングしたい
+    fn run_delete_prompt<F, G>(&self, target_links: F, delete_link: G)
+        where F: Fn(&Config) -> Vec<String>,
+              G: Fn(&mut Config, &str) {
+        let mut config: Config = Config::new().load_from_file().unwrap();
+        let urls = target_links(&config);
+
         println!("削除したいURLまたは番号を入力してください。");
         println!("q, quit, exit で終了します。");
-        let link_itretor = links.iter().enumerate();
-        for (i, link) in link_itretor {
-            println!("{}: {}", i, link);
+        let link_itretor = urls.iter().enumerate();
+        for (i, url) in link_itretor {
+            println!("{}: {}", i, url);
         }
 
         loop {
@@ -259,31 +279,23 @@ impl App {
             format!("入力された内容: {}", input);
 
             if let Ok(index) = input.parse::<usize>() {
-                if index < links.len() {
-                    let url = &links[index];
-                    self.delete_link(url);
-                    println!("URLを削除しました: {}", url);
+                if index < urls.len() {
+                    let url = &urls[index];
+                    delete_link(&mut config, url);
                     break;
                 } else {
                     println!("無効な番号です。もう一度入力してください。");
                 }
             } else {
                 // 入力がURLの場合
-                if links.contains(&input.to_string()) {
-                    self.delete_link(input);
-                    println!("URLを削除しました: {}", input);
+                if urls.contains(&input.to_string()) {
+                    delete_link(&mut config, input);
                     break;
                 } else {
                     println!("URLが見つかりません。もう一度入力してください。");
                 }
             }
         }
-    }
-
-    pub fn delete_link(&self, url: &str) {
-        let config = Config::new();
-        let mut load_config: Config = config.load_from_file().unwrap();
-        let _result = load_config.delete_link(url);
     }
 
     pub fn show_history(&self) {
