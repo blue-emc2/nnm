@@ -18,7 +18,7 @@ pub struct Config {
 pub enum ConfigMessage {
     ExistsConfig,
     Success(String),
-    Error(String),
+    // Error(String), 後で実装する
 }
 
 impl File for Config {
