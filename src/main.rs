@@ -31,7 +31,7 @@ fn main() {
             match app.init_config() {
                 Ok(path) => {
                     println!("設定ファイルを作成しました。{}", path);
-                    println!("nnm add {{url}} でRSSのURLを追加しましょう。");
+                    println!("nnm rss add {{url}} でRSSのURLを追加しましょう。");
                 }
                 Err(e) => {
                     println!("Error: {:#?}", e);
