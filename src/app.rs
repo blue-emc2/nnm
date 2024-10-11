@@ -1,8 +1,9 @@
+pub mod config;
+
 mod screen;
 mod entity;
 mod parser;
 mod table;
-mod config;
 mod history;
 mod file;
 
@@ -14,7 +15,7 @@ use std::{env, io};
 use std::path::PathBuf;
 use std::result::Result;
 use std::io::Write;
-use config::Config;
+use config::{Config, ConfigMessage};
 use screen::Screen;
 use entity::Entity;
 use parser::Parser;
@@ -137,7 +138,7 @@ impl App {
         self.screen.draw(&self.entities, options);
     }
 
-    pub fn init_config(&self) -> Result<String, std::io::Error> {
+    pub fn init_config(&self) -> Result<ConfigMessage, std::io::Error> {
         let home_dir = env::var("HOME").unwrap_or_else(|_| ".".to_string());
         let mut config_dir = PathBuf::from(home_dir);
         config_dir.push(".config/nnm");
@@ -147,6 +148,9 @@ impl App {
         }
 
         let config_file_path = config_dir.join("config.json");
+        if config_file_path.exists() {
+            return Ok(ConfigMessage::ExistsConfig);
+        }
         let mut config = Config::new();
         #[cfg(debug_assertions)]
         {
@@ -157,7 +161,7 @@ impl App {
         let history = History::new();
         history.save_to_file(history.clone())?;
 
-        Ok(config_file_path.into_os_string().into_string().unwrap())
+        Ok(ConfigMessage::Success(config_file_path.into_os_string().into_string().unwrap()))
     }
 
     fn is_config_exists(&self) -> bool {

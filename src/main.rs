@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use clap::Parser;
 use app::App;
 use commands::{Actions, Commands};
+use app::config::ConfigMessage;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -29,9 +30,12 @@ fn main() {
     match &cli.command {
         Some(Commands::Init) => {
             match app.init_config() {
-                Ok(path) => {
+                Ok(ConfigMessage::Success(path)) => {
                     println!("設定ファイルを作成しました。{}", path);
                     println!("nnm rss add \"{{url}}\" でRSSのURLを追加しましょう。");
+                }
+                Ok(ConfigMessage::ExistsConfig) => {
+                    println!("設定ファイルはすでに存在します。");
                 }
                 Err(e) => {
                     println!("Error: {:#?}", e);

@@ -15,6 +15,12 @@ pub struct Config {
     history_expiaration: i32,   // 履歴の保持期間(日)
 }
 
+pub enum ConfigMessage {
+    ExistsConfig,
+    Success(String),
+    Error(String),
+}
+
 impl File for Config {
     fn file_path(&self) -> PathBuf {
         let home_dir = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
