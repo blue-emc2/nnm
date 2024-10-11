@@ -26,7 +26,7 @@ nnm
 ### `nnm rss add`
 
 ```bash
-nnm rss add [URL]
+nnm rss add "[URL]"
 ```
 
 RSSのURLを設定ファイルに登録します。
@@ -43,7 +43,7 @@ RSSリストからURLを削除します。
 ### `nnm bookmark add`
 
 ```bash
-nnm bookmark add [URL]
+nnm bookmark add "[URL]"
 ```
 
 保存しておきたいURLをお気に入りリストに登録します。
