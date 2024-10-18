@@ -325,7 +325,7 @@ impl App {
                         entity_type: body.entity_type.clone(),
                         title: body.title.clone(),
                         link: body.link.clone(),
-                        description: "".to_string(),
+                        description: body.description.to_string(),
                         pub_date: None,
                     };
                     history.entity_push(entity);
