@@ -10,7 +10,7 @@ use app::config::ConfigMessage;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-#[clap(name = "nnm", version = "1.0", about = "コンソールで読むRSSリーダー")]
+#[clap(name = "nnm", version = "1.0.1", about = "コンソールで読むRSSリーダー")]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
