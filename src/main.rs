@@ -29,7 +29,7 @@ fn main() {
 
     match &cli.command {
         Some(Commands::Init) => {
-            match app.init_config() {
+            match app.config.create() {
                 Ok(ConfigMessage::Success(path)) => {
                     println!("設定ファイルを作成しました。{}", path);
                     println!("nnm rss add \"{{url}}\" でRSSのURLを追加しましょう。");
@@ -46,7 +46,7 @@ fn main() {
             match action {
                 Some(Actions::Add { url }) => {
                     if let Some(url) = url {
-                        match app.add_link(url) {
+                        match app.rss.add_link(url) {
                             Ok(url) => {
                                 println!("{} を追加しました。", url);
                             }
@@ -57,10 +57,10 @@ fn main() {
                     }
                 }
                 Some(Actions::Delete) => {
-                    app.run_delete_prompt_rss();
+                    app.rss.delete_in_prompt();
                 }
                 None => {
-                    todo!();
+                    app.rss.show();
                 }
             }
         },
@@ -68,22 +68,22 @@ fn main() {
             match action {
                 Some(Actions::Add { url }) => {
                     if let Some(url) = url {
-                        app.add_link_to_bookmarks(url);
+                        app.bookmark.add_link(url);
                     }
                 }
                 Some(Actions::Delete) => {
-                    app.run_delete_prompt_bookmark();
+                    app.bookmark.delete_in_prompt();
                 }
                 None => {
-                    app.show_bookmarks();
+                    app.bookmark.show();
                 }
             }
         },
         Some(Commands::History) => {
-            app.show_history();
+            app.history.show();
         }
         None => {
-            app.run(options);
+            app.rss.run(options);
         }
     }
 }

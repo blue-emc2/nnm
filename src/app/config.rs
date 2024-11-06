@@ -45,8 +45,16 @@ impl Config {
         self.links.as_ref()
     }
 
+    pub fn mut_links(&mut self) -> &mut Vec<String> {
+        &mut self.links
+    }
+
     pub fn bookmarks(&self) -> &Vec<String> {
         self.bookmarks.as_ref()
+    }
+
+    pub fn mut_bookmarks(&mut self) -> &mut Vec<String> {
+        &mut self.bookmarks
     }
 
     pub fn chunk_size(&self) -> i32 {
