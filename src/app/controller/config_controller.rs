@@ -1,6 +1,10 @@
 use std::{env, path::PathBuf};
 
-use crate::app::{config::{Config, ConfigMessage}, file::File, history::History};
+use crate::app::{
+    config::{Config, ConfigMessage},
+    file::File,
+    history::History,
+};
 
 pub struct ConfigController;
 
@@ -21,13 +25,17 @@ impl ConfigController {
         let mut config = Config::new();
         #[cfg(debug_assertions)]
         {
-            config.push_link("https://www.ruby-lang.org/ja/feeds/news.rss").unwrap();
+            config
+                .push_link("https://www.ruby-lang.org/ja/feeds/news.rss")
+                .unwrap();
         }
         config.save_to_file(config.clone())?;
 
         let history = History::new();
         history.save_to_file(history.clone())?;
 
-        Ok(ConfigMessage::Success(config_file_path.into_os_string().into_string().unwrap()))
+        Ok(ConfigMessage::Success(
+            config_file_path.into_os_string().into_string().unwrap(),
+        ))
     }
 }

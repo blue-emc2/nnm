@@ -3,11 +3,11 @@ mod commands;
 
 use std::collections::HashMap;
 
-use clap::Parser;
-use app::App;
-use commands::{Actions, Commands};
 use app::config::ConfigMessage;
 use app::prompt::Prompt;
+use app::App;
+use clap::Parser;
+use commands::{Actions, Commands};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -29,69 +29,59 @@ fn main() {
     options.insert("head".to_string(), number.to_string());
 
     match &cli.command {
-        Some(Commands::Init) => {
-            match app.config.create() {
-                Ok(ConfigMessage::Success(path)) => {
-                    println!("設定ファイルを作成しました。{}", path);
-                    println!("nnm rss add \"{{url}}\" でRSSのURLを追加しましょう。");
-                }
-                Ok(ConfigMessage::ExistsConfig) => {
-                    println!("設定ファイルはすでに存在します。");
-                }
-                Err(e) => {
-                    println!("Error: {:#?}", e);
-                }
+        Some(Commands::Init) => match app.config.create() {
+            Ok(ConfigMessage::Success(path)) => {
+                println!("設定ファイルを作成しました。{}", path);
+                println!("nnm rss add \"{{url}}\" でRSSのURLを追加しましょう。");
             }
-        }
-        Some(Commands::Rss { action } ) => {
-            match action {
-                Some(Actions::Add { url }) => {
-                    if let Some(url) = url {
-                        match app.rss.add_link(url) {
-                            Ok(url) => {
-                                println!("{} を追加しました。", url);
-                            }
-                            Err(e) => {
-                                println!("Error: {:#?}", e);
-                            }
-                        }
-                    }
-                }
-                Some(Actions::Delete) => {
-                    match app.rss.delete_link() {
-                        Ok(()) => {
-                            println!("URLを削除しました");
-                        }
-                        Err(e) => {
-                            println!("削除に失敗しました: {:?}", e);
-                        }
-                    }
-                }
-                None => {
-                    app.rss.show();
-                }
+            Ok(ConfigMessage::ExistsConfig) => {
+                println!("設定ファイルはすでに存在します。");
+            }
+            Err(e) => {
+                println!("Error: {:#?}", e);
             }
         },
-        Some(Commands::Bookmark { action} ) => {
-            match action {
-                Some(Actions::Add { url }) => {
-                    if let Some(url) = url {
-                        app.bookmark.add_link(url);
-                    }
-                }
-                Some(Actions::Delete) => {
-                    match app.bookmark.delete_link() {
-                        Ok(()) => {
-                            println!("URLを削除しました");
+        Some(Commands::Rss { action }) => match action {
+            Some(Actions::Add { url }) => {
+                if let Some(url) = url {
+                    match app.rss.add_link(url) {
+                        Ok(url) => {
+                            println!("{} を追加しました。", url);
                         }
                         Err(e) => {
-                            println!("削除に失敗しました: {:?}", e);
+                            println!("Error: {:#?}", e);
                         }
                     }
                 }
-                None => {
-                    app.bookmark.show();
+            }
+            Some(Actions::Delete) => match app.rss.delete_link() {
+                Ok(()) => {
+                    println!("URLを削除しました");
                 }
+                Err(e) => {
+                    println!("削除に失敗しました: {:?}", e);
+                }
+            },
+            None => {
+                app.rss.show();
+            }
+        },
+        Some(Commands::Bookmark { action }) => match action {
+            Some(Actions::Add { url }) => {
+                if let Some(url) = url {
+                    app.bookmark.add_link(url);
+                }
+            }
+            Some(Actions::Delete) => match app.bookmark.delete_link() {
+                Ok(()) => {
+                    println!("URLを削除しました");
+                }
+                Err(e) => {
+                    println!("削除に失敗しました: {:?}", e);
+                }
+            },
+            None => {
+                app.bookmark.show();
             }
         },
         Some(Commands::History) => {

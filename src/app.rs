@@ -2,29 +2,27 @@ pub mod config;
 pub mod controller;
 pub mod prompt;
 
-mod screen;
 mod entity;
-mod parser;
-mod table;
-mod history;
 mod file;
+mod history;
+mod parser;
+mod screen;
+mod table;
 
+use config::Config;
 use controller::{
-    rss_controller::RssController,
-    bookmark_controller::BookmarkController,
-    history_controller::HistoryController,
-    config_controller::ConfigController,
+    bookmark_controller::BookmarkController, config_controller::ConfigController,
+    history_controller::HistoryController, rss_controller::RssController,
 };
+use entity::Entity;
 use file::File;
 use history::History;
-use tokio::runtime::Runtime;
+use parser::Parser;
+use screen::Screen;
 use std::collections::HashMap;
 use std::io::{stdin, stdout, Error, Write};
 use std::result::Result;
-use config::Config;
-use screen::Screen;
-use entity::Entity;
-use parser::Parser;
+use tokio::runtime::Runtime;
 
 pub struct App {
     entities: Vec<Entity>,
@@ -49,15 +47,19 @@ impl App {
     }
 
     pub fn run(&mut self, options: HashMap<String, String>) {
-         if !self.is_config_exists() {
-            eprintln!("設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。");
+        if !self.is_config_exists() {
+            eprintln!(
+                "設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。"
+            );
             return;
         };
 
         let config: Config = match Config::new().load_from_file() {
             Ok(config) => config,
             Err(_) => {
-                eprintln!("設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。");
+                eprintln!(
+                    "設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。"
+                );
                 return;
             }
         };
@@ -66,24 +68,36 @@ impl App {
         let rt = Runtime::new().unwrap();
 
         let results = rt.block_on(async {
-            let tasks = links.into_iter().map(|link| {
-                tokio::spawn(async move {
-                    #[cfg(debug_assertions)]
-                    {
-                        println!("- start fetch task {} : {:?}", link, std::thread::current().id());
-                    }
-                    let res = Self::fetch_rss(link.clone()).await;
-                    #[cfg(debug_assertions)]
-                    {
-                        println!("- end fetch task {} : {:?}", link, std::thread::current().id());
-                    }
-                    res
+            let tasks = links
+                .into_iter()
+                .map(|link| {
+                    tokio::spawn(async move {
+                        #[cfg(debug_assertions)]
+                        {
+                            println!(
+                                "- start fetch task {} : {:?}",
+                                link,
+                                std::thread::current().id()
+                            );
+                        }
+                        let res = Self::fetch_rss(link.clone()).await;
+                        #[cfg(debug_assertions)]
+                        {
+                            println!(
+                                "- end fetch task {} : {:?}",
+                                link,
+                                std::thread::current().id()
+                            );
+                        }
+                        res
+                    })
                 })
-            }).collect::<Vec<_>>();
+                .collect::<Vec<_>>();
 
             let results = futures::future::join_all(tasks).await;
 
-            let fetched_data: Vec<String> = results.into_iter()
+            let fetched_data: Vec<String> = results
+                .into_iter()
                 .filter_map(|res| res.ok())
                 .filter_map(|res| res.ok())
                 .collect();
@@ -127,7 +141,11 @@ impl App {
         Ok(body)
     }
 
-    pub fn parse_xml(&mut self, bodys: Vec<String>, config: Config) -> Result<(), quick_xml::Error> {
+    pub fn parse_xml(
+        &mut self,
+        bodys: Vec<String>,
+        config: Config,
+    ) -> Result<(), quick_xml::Error> {
         let parser = Parser::new();
         let chunk_size = config.chunk_size();
 
@@ -135,7 +153,10 @@ impl App {
             let ret = parser.parse(body);
             match ret {
                 Ok(entities) => {
-                    let mut chunks = entities.into_iter().take(chunk_size.try_into().unwrap()).collect();
+                    let mut chunks = entities
+                        .into_iter()
+                        .take(chunk_size.try_into().unwrap())
+                        .collect();
                     self.entities.append(&mut chunks);
                 }
                 Err(e) => {
@@ -245,7 +266,7 @@ impl App {
 
                 Ok(())
             }
-            Err(e   ) => {
+            Err(e) => {
                 eprintln!("履歴ファイルが見つかりませんでした。\nhistory.jsonを再作成します。");
                 let history = History::new();
                 history.save_to_file(history.clone())?;

@@ -9,7 +9,7 @@ pub struct Parser {
 impl Parser {
     pub fn new() -> Self {
         Parser {
-            re: Regex::new(r"<[^>]*>").unwrap()
+            re: Regex::new(r"<[^>]*>").unwrap(),
         }
     }
 
@@ -27,7 +27,8 @@ impl Parser {
                         item.title.clone().unwrap_or_else(|| "".to_string()),
                         item.link.clone(),
                         self.clean_string(item.description.as_ref()),
-                        None);
+                        None,
+                    );
                     buf.push(entity);
                 });
 
@@ -41,7 +42,8 @@ impl Parser {
                         item.title.clone().unwrap_or_else(|| "".to_string()),
                         item.link.clone(),
                         self.clean_string(item.description.as_ref()),
-                        item.pub_date.clone());
+                        item.pub_date.clone(),
+                    );
                     buf.push(entity);
                 });
 
@@ -55,7 +57,7 @@ impl Parser {
                         item.title.clone().unwrap_or_else(|| "".to_string()),
                         item.link.clone(),
                         self.clean_string(item.summary.as_ref()),
-                        item.pub_date.clone()
+                        item.pub_date.clone(),
                     );
                     buf.push(entity);
                 });
@@ -96,8 +98,12 @@ impl Parser {
         if body.is_none() {
             return "".to_string();
         }
-        let tmp = self.re.replace_all(body.as_deref().unwrap(), "").to_string();
-        let tmp = tmp.replace("\n", "")
+        let tmp = self
+            .re
+            .replace_all(body.as_deref().unwrap(), "")
+            .to_string();
+        let tmp = tmp
+            .replace("\n", "")
             .replace("\r", "")
             .replace("\t", "")
             .replace(" ", "");
@@ -141,31 +147,13 @@ mod tests {
         let result = parser.parse(body).unwrap();
         assert_eq!(result.len(), 2);
 
-        assert_eq!(
-            result.get(0).unwrap().title,
-            "Example title"
-        );
-        assert_eq!(
-            result.get(0).unwrap().link,
-            "https://example.com"
-        );
-        assert_eq!(
-            result.get(0).unwrap().description,
-            "Example description"
-        );
+        assert_eq!(result.get(0).unwrap().title, "Example title");
+        assert_eq!(result.get(0).unwrap().link, "https://example.com");
+        assert_eq!(result.get(0).unwrap().description, "Example description");
 
-        assert_eq!(
-            result.get(1).unwrap().title,
-            "Example title2"
-        );
-        assert_eq!(
-            result.get(1).unwrap().link,
-            "https://example.com2"
-        );
-        assert_eq!(
-            result.get(1).unwrap().description,
-            "Example description2"
-        );
+        assert_eq!(result.get(1).unwrap().title, "Example title2");
+        assert_eq!(result.get(1).unwrap().link, "https://example.com2");
+        assert_eq!(result.get(1).unwrap().description, "Example description2");
     }
 
     #[test]
@@ -197,31 +185,13 @@ mod tests {
         let result = parser.parse(body).unwrap();
         assert!(result.len() == 2);
 
-        assert_eq!(
-            result.get(0).unwrap().title,
-            "Example title 1"
-        );
-        assert_eq!(
-            result.get(0).unwrap().link,
-            "https://example1.com"
-        );
-        assert_eq!(
-            result.get(0).unwrap().description,
-            "Example description 1"
-        );
+        assert_eq!(result.get(0).unwrap().title, "Example title 1");
+        assert_eq!(result.get(0).unwrap().link, "https://example1.com");
+        assert_eq!(result.get(0).unwrap().description, "Example description 1");
 
-        assert_eq!(
-            result.get(1).unwrap().title,
-            "Example title 2"
-        );
-        assert_eq!(
-            result.get(1).unwrap().link,
-            "https://example2.com"
-        );
-        assert_eq!(
-            result.get(1).unwrap().description,
-            "Example description 2"
-        );
+        assert_eq!(result.get(1).unwrap().title, "Example title 2");
+        assert_eq!(result.get(1).unwrap().link, "https://example2.com");
+        assert_eq!(result.get(1).unwrap().description, "Example description 2");
     }
 
     #[test]
@@ -251,30 +221,12 @@ mod tests {
         let result = parser.parse(body).unwrap();
         assert!(result.len() == 2);
 
-        assert_eq!(
-            result.get(0).unwrap().title,
-            "Example title 1"
-        );
-        assert_eq!(
-            result.get(0).unwrap().link,
-            "https://example1.com"
-        );
-        assert_eq!(
-            result.get(0).unwrap().description,
-            "Example description 1"
-        );
+        assert_eq!(result.get(0).unwrap().title, "Example title 1");
+        assert_eq!(result.get(0).unwrap().link, "https://example1.com");
+        assert_eq!(result.get(0).unwrap().description, "Example description 1");
 
-        assert_eq!(
-            result.get(1).unwrap().title,
-            "Example title 2"
-        );
-        assert_eq!(
-            result.get(1).unwrap().link,
-            "https://example2.com"
-        );
-        assert_eq!(
-            result.get(1).unwrap().description,
-            "Example description 2"
-        );
+        assert_eq!(result.get(1).unwrap().title, "Example title 2");
+        assert_eq!(result.get(1).unwrap().link, "https://example2.com");
+        assert_eq!(result.get(1).unwrap().description, "Example description 2");
     }
 }

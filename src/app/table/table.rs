@@ -2,7 +2,7 @@ use core::fmt;
 use std::collections::HashMap;
 use unicode_width::UnicodeWidthStr;
 
-use crate::app::table::row::{Row, ContentKey};
+use crate::app::table::row::{ContentKey, Row};
 
 pub struct Table {
     width: Option<u16>,
@@ -128,7 +128,7 @@ impl Table {
             return formatted_text.to_string();
         }
 
-        let mut row_count = 0;  // 画面を埋め尽くさないよう長くても2行ぐらいにする
+        let mut row_count = 0; // 画面を埋め尽くさないよう長くても2行ぐらいにする
         for c in formatted_text.chars() {
             let char_size = UnicodeWidthStr::width_cjk(c.to_string().as_str()) as u16;
             let line_size = UnicodeWidthStr::width_cjk(line.as_str()) as u16;

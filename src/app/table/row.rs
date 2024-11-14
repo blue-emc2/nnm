@@ -31,8 +31,6 @@ impl Row {
 
 impl From<Vec<String>> for Row {
     fn from(v: Vec<String>) -> Self {
-        Row {
-            content: v,
-        }
+        Row { content: v }
     }
 }

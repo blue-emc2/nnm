@@ -1,7 +1,6 @@
 pub struct HistoryController;
 
 impl HistoryController {
-
     pub fn show(&self) {
         // Implement the logic to get history
     }

@@ -5,14 +5,13 @@ use serde::{Deserialize, Serialize};
 use super::file::File;
 
 const DEFAULT_DISPLAY_LIMIT: i32 = 10;
-#[derive(Debug, Clone)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     display_limit: i32,
     chunk_size: i32,
-    bookmarks: Vec<String>, // お気に入り一覧
-    links: Vec<String>,     // rssのリンク一覧
-    history_expiaration: i32,   // 履歴の保持期間(日)
+    bookmarks: Vec<String>,   // お気に入り一覧
+    links: Vec<String>,       // rssのリンク一覧
+    history_expiaration: i32, // 履歴の保持期間(日)
 }
 
 pub enum ConfigMessage {

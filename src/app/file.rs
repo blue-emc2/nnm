@@ -1,4 +1,8 @@
-use std::{fs, io::{self, Write}, path::PathBuf};
+use std::{
+    fs,
+    io::{self, Write},
+    path::PathBuf,
+};
 
 use serde::{Deserialize, Serialize};
 
