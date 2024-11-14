@@ -1,5 +1,6 @@
 pub mod config;
 pub mod controller;
+pub mod prompt;
 
 mod screen;
 mod entity;
@@ -18,11 +19,9 @@ use file::File;
 use history::History;
 use tokio::runtime::Runtime;
 use std::collections::HashMap;
-use std::{env, io};
-use std::path::PathBuf;
+use std::io::{stdin, stdout, Error, Write};
 use std::result::Result;
-use std::io::Write;
-use config::{Config, ConfigMessage};
+use config::Config;
 use screen::Screen;
 use entity::Entity;
 use parser::Parser;
@@ -166,40 +165,8 @@ impl App {
         }
     }
 
-    pub fn add_link(&self, url: &String) -> Result<String, std::io::Error> {
-        let mut config: Config = Config::new().load_from_file().unwrap();
-        let ret = config.push_link(url);
-
-        match ret {
-            Ok(url) => {
-                Ok(url)
-            }
-            Err(e) => {
-                println!("{:?}", e);
-                Err(e)
-            }
-        }
-    }
-
-    pub fn add_link_to_bookmarks(&self, url: &String) {
-        let config: Result<Config, io::Error> = Config::new().load_from_file();
-        match config {
-            Ok(mut config) => {
-                if let Err(e) = config.push_bookmark(url) {
-                    eprintln!("ブックマークの追加に失敗しました: {:?}", e);
-                } else {
-                    println!("{:?} をブックマークしました。", url);
-                }
-            }
-            Err(e) => {
-                // TODO: ここのエラーは精査する必要がありそう
-                eprintln!("設定ファイルに異常が見つかりました。: {:?}", e);
-            }
-        }
-    }
-
     pub fn show_bookmarks(&self) {
-        let config: Result<Config, io::Error> = Config::new().load_from_file();
+        let config: Result<Config, Error> = Config::new().load_from_file();
         match config {
             Ok(config) => {
                 let bookmarks = config.bookmarks();
@@ -214,85 +181,38 @@ impl App {
         }
     }
 
-    pub fn run_delete_prompt_rss(&self) {
-        self.run_delete_prompt(|config: &Config| {
-                config.links().clone()
-            }, |config: &mut Config, url: &str| {
-                match config.delete_link_and_save(&url) {
-                    Ok(_) => {
-                        println!("URLを削除しました: {}", url);
-                    }
-                    Err(e) => {
-                        println!("削除に失敗しました: {:?}", e);
-                    }
-                }
-            });
-    }
+    // pub fn run_delete_prompt_rss(&self) {
+    //     self.run_delete_prompt(|config: &Config| {
+    //             config.links().clone()
+    //         }, |config: &mut Config, url: &str| {
+    //             match config.delete_link_and_save(&url) {
+    //                 Ok(_) => {
+    //                     println!("URLを削除しました: {}", url);
+    //                 }
+    //                 Err(e) => {
+    //                     println!("削除に失敗しました: {:?}", e);
+    //                 }
+    //             }
+    //         });
+    // }
 
-    pub fn run_delete_prompt_bookmark(&self) {
-        self.run_delete_prompt(|config: &Config| {
-                config.bookmarks().clone()
-            }, |config: &mut Config, url: &str| {
-                match config.delete_bookmark_and_save(&url) {
-                    Ok(_) => {
-                        println!("ブックマークを削除しました: {}", url);
-                    }
-                    Err(e) => {
-                        println!("削除に失敗しました: {:?}", e);
-                    }
-                }
-            });
-    }
-
-    // 無理矢理感がすごいのでリファクタリングしたい
-    fn run_delete_prompt<F, G>(&self, target_links: F, delete_link: G)
-        where F: Fn(&Config) -> Vec<String>,
-              G: Fn(&mut Config, &str) {
-        let mut config: Config = Config::new().load_from_file().unwrap();
-        let urls = target_links(&config);
-
-        println!("削除したいURLまたは番号を入力してください。");
-        println!("q, quit, exit で終了します。");
-        let link_itretor = urls.iter().enumerate();
-        for (i, url) in link_itretor {
-            println!("{}: {}", i, url);
-        }
-
-        loop {
-            print!("> ");
-            io::stdout().flush().unwrap();
-
-            let mut input = String::new();
-            io::stdin().read_line(&mut input).unwrap();
-            let input = input.trim();
-            if input == "q" || input == "quit" || input == "exit" {
-                break;
-            }
-
-            format!("入力された内容: {}", input);
-
-            if let Ok(index) = input.parse::<usize>() {
-                if index < urls.len() {
-                    let url = &urls[index];
-                    delete_link(&mut config, url);
-                    break;
-                } else {
-                    println!("無効な番号です。もう一度入力してください。");
-                }
-            } else {
-                // 入力がURLの場合
-                if urls.contains(&input.to_string()) {
-                    delete_link(&mut config, input);
-                    break;
-                } else {
-                    println!("URLが見つかりません。もう一度入力してください。");
-                }
-            }
-        }
-    }
+    // pub fn run_delete_prompt_bookmark(&self) {
+    //     self.run_delete_prompt(|config: &Config| {
+    //             config.bookmarks().clone()
+    //         }, |config: &mut Config, url: &str| {
+    //             match config.delete_bookmark_and_save(&url) {
+    //                 Ok(_) => {
+    //                     println!("ブックマークを削除しました: {}", url);
+    //                 }
+    //                 Err(e) => {
+    //                     println!("削除に失敗しました: {:?}", e);
+    //                 }
+    //             }
+    //         });
+    // }
 
     pub fn show_history(&self) {
-        let history: Result<History, io::Error> = History::new().load_from_file();
+        let history: Result<History, Error> = History::new().load_from_file();
         match history {
             Ok(history) => {
                 let entities = history.get_entities();
@@ -305,7 +225,7 @@ impl App {
     }
 
     fn save_history(&self) -> Result<(), std::io::Error> {
-        let history: Result<History, io::Error> = History::new().load_from_file();
+        let history: Result<History, Error> = History::new().load_from_file();
 
         match history {
             Ok(mut history) => {
@@ -335,7 +255,7 @@ impl App {
     }
 
     fn filter_new_entities(&mut self) -> u16 {
-        let history: Result<History, io::Error> = History::new().load_from_file();
+        let history: Result<History, Error> = History::new().load_from_file();
         match history {
             Ok(history) => {
                 let mut new_entities: Vec<Entity> = Vec::new();

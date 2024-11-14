@@ -7,6 +7,7 @@ use clap::Parser;
 use app::App;
 use commands::{Actions, Commands};
 use app::config::ConfigMessage;
+use app::prompt::Prompt;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -22,7 +23,7 @@ struct Cli {
 
 fn main() {
     let cli = Cli::parse();
-    let mut app: App = App::new();
+    let app: App = App::new();
     let number = cli.number;
     let mut options = HashMap::new();
     options.insert("head".to_string(), number.to_string());
@@ -57,7 +58,14 @@ fn main() {
                     }
                 }
                 Some(Actions::Delete) => {
-                    app.rss.delete_in_prompt();
+                    match app.rss.delete_link() {
+                        Ok(()) => {
+                            println!("URLを削除しました");
+                        }
+                        Err(e) => {
+                            println!("削除に失敗しました: {:?}", e);
+                        }
+                    }
                 }
                 None => {
                     app.rss.show();
@@ -72,7 +80,14 @@ fn main() {
                     }
                 }
                 Some(Actions::Delete) => {
-                    app.bookmark.delete_in_prompt();
+                    match app.bookmark.delete_link() {
+                        Ok(()) => {
+                            println!("URLを削除しました");
+                        }
+                        Err(e) => {
+                            println!("削除に失敗しました: {:?}", e);
+                        }
+                    }
                 }
                 None => {
                     app.bookmark.show();
