@@ -22,13 +22,7 @@ impl ConfigController {
         if config_file_path.exists() {
             return Ok(ConfigMessage::ExistsConfig);
         }
-        let mut config = Config::new();
-        #[cfg(debug_assertions)]
-        {
-            config
-                .push_link("https://www.ruby-lang.org/ja/feeds/news.rss")
-                .unwrap();
-        }
+        let config = Config::new();
         config.save_to_file(config.clone())?;
 
         let history = History::new();

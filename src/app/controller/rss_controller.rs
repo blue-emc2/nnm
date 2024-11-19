@@ -1,8 +1,22 @@
 use std::{collections::HashMap, io};
 
-use crate::app::{config::Config, file::File, prompt::Prompt};
+use crate::app::{
+    config::Config, entity::Entity, file::File, history::History, parser::Parser, prompt::Prompt,
+    screen,
+};
+use tokio::runtime::Runtime;
 
-pub struct RssController;
+pub struct RssController {
+    entities: Vec<Entity>,
+}
+
+impl Default for RssController {
+    fn default() -> Self {
+        RssController {
+            entities: Vec::new(),
+        }
+    }
+}
 
 impl Prompt for RssController {
     fn exec_delete_link(&self, url: &str) {
@@ -44,7 +58,190 @@ impl RssController {
         Ok(())
     }
 
-    pub fn run(&self, options: HashMap<String, String>) {
-        println!("Running RSS with options: {:#?}", options);
+    pub fn run(&mut self, options: HashMap<String, String>) {
+        if !self.is_config_exists() {
+            eprintln!(
+                "設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。"
+            );
+            return;
+        };
+
+        let config: Config = match Config::new().load_from_file() {
+            Ok(config) => config,
+            Err(_) => {
+                eprintln!(
+                    "設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。"
+                );
+                return;
+            }
+        };
+
+        let links = config.links().clone();
+        let rt = Runtime::new().unwrap();
+
+        let results = rt.block_on(async {
+            let tasks = links
+                .into_iter()
+                .map(|link| {
+                    tokio::spawn(async move {
+                        #[cfg(debug_assertions)]
+                        {
+                            println!(
+                                "- start fetch task {} : {:?}",
+                                link,
+                                std::thread::current().id()
+                            );
+                        }
+                        let res = Self::fetch_rss(link.clone()).await;
+                        #[cfg(debug_assertions)]
+                        {
+                            println!(
+                                "- end fetch task {} : {:?}",
+                                link,
+                                std::thread::current().id()
+                            );
+                        }
+                        res
+                    })
+                })
+                .collect::<Vec<_>>();
+
+            let results = futures::future::join_all(tasks).await;
+
+            let fetched_data: Vec<String> = results
+                .into_iter()
+                .filter_map(|res| res.ok())
+                .filter_map(|res| res.ok())
+                .collect();
+
+            fetched_data
+        });
+
+        if let Err(e) = self.parse_xml(results, config) {
+            println!("Error parsing XML: {:#?}", e);
+            return;
+        }
+
+        // 新しい記事のみを表示するためにここでフィルタリングするが、
+        // filter_new_entitiesを常に呼ばないといけないのでなんだかいけてない
+        let new_entity_size = self.filter_new_entities();
+        if new_entity_size == 0 {
+            println!("新しい記事はありません。");
+            return;
+        } else {
+            let screen = screen::Screen::new();
+            screen.draw(&self.entities, options);
+        }
+
+        if let Err(e) = self.save_history() {
+            println!("Error saving history: {:#?}", e);
+            return;
+        }
+    }
+
+    async fn fetch_rss(url: String) -> Result<String, reqwest::Error> {
+        // let mut file = File::open("tests/fixtures/sample.xml").unwrap();
+        // let mut response = String::new();
+        // file.read_to_string(&mut response).unwrap();
+
+        // TODO: 後で引数とかで切り替えたい
+        // let url: &str = "https://game.watch.impress.co.jp/data/rss/1.0/gmw/feed.rdf";
+        // let url: &str = "https://b.hatena.ne.jp/entrylist/it.rss";
+        // let url: &str = "https://rss.itmedia.co.jp/rss/2.0/netlab.xml"; // 2.0
+
+        let response = reqwest::get(&url).await?;
+        let body = response.text().await?;
+        Ok(body)
+    }
+
+    pub fn parse_xml(
+        &mut self,
+        bodys: Vec<String>,
+        config: Config,
+    ) -> Result<(), quick_xml::Error> {
+        let parser = Parser::new();
+        let chunk_size = config.chunk_size();
+
+        for body in bodys {
+            let ret = parser.parse(body);
+            match ret {
+                Ok(entities) => {
+                    let mut chunks = entities
+                        .into_iter()
+                        .take(chunk_size.try_into().unwrap())
+                        .collect();
+                    self.entities.append(&mut chunks);
+                }
+                Err(e) => {
+                    println!("{:?}", e);
+                    return Err(e);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn is_config_exists(&self) -> bool {
+        let config = Config::new();
+        let exists = config.default_file_path().try_exists();
+        match exists {
+            Ok(true) => true,
+            Ok(false) => false,
+            Err(e) => {
+                println!("load_config: {:?}", e);
+                false
+            }
+        }
+    }
+
+    fn save_history(&self) -> Result<(), std::io::Error> {
+        let history: Result<History, io::Error> = History::new().load_from_file();
+
+        match history {
+            Ok(mut history) => {
+                for body in self.entities.iter() {
+                    let entity = Entity {
+                        entity_type: body.entity_type.clone(),
+                        title: body.title.clone(),
+                        link: body.link.clone(),
+                        description: body.description.to_string(),
+                        pub_date: None,
+                    };
+                    history.entity_push(entity);
+                }
+
+                history.update_last_fetched_date();
+                history.save_to_file(history.clone())?;
+
+                Ok(())
+            }
+            Err(e) => {
+                eprintln!("履歴ファイルが見つかりませんでした。\nhistory.jsonを再作成します。");
+                let history = History::new();
+                history.save_to_file(history.clone())?;
+                Err(e)
+            }
+        }
+    }
+
+    fn filter_new_entities(&mut self) -> u16 {
+        let history: Result<History, io::Error> = History::new().load_from_file();
+        match history {
+            Ok(history) => {
+                let mut new_entities: Vec<Entity> = Vec::new();
+                for body in self.entities.iter() {
+                    if !history.get_entities().iter().any(|h| h.link == body.link) {
+                        new_entities.push(body.clone());
+                    }
+                }
+                self.entities = new_entities;
+                self.entities.len() as u16
+            }
+            Err(e) => {
+                eprintln!("Error loading history: {:?}", e);
+                0
+            }
+        }
     }
 }

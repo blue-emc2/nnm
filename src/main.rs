@@ -4,7 +4,6 @@ mod commands;
 use std::collections::HashMap;
 
 use app::config::ConfigMessage;
-use app::prompt::Prompt;
 use app::App;
 use clap::Parser;
 use commands::{Actions, Commands};
@@ -23,7 +22,7 @@ struct Cli {
 
 fn main() {
     let cli = Cli::parse();
-    let app: App = App::new();
+    let mut app: App = App::new();
     let number = cli.number;
     let mut options = HashMap::new();
     options.insert("head".to_string(), number.to_string());
@@ -46,10 +45,10 @@ fn main() {
                 if let Some(url) = url {
                     match app.rss.add_link(url) {
                         Ok(url) => {
-                            println!("{} を追加しました。", url);
+                            println!("{} を追加しました", url);
                         }
                         Err(e) => {
-                            println!("Error: {:#?}", e);
+                            println!("追加に失敗しました {:#?}", e);
                         }
                     }
                 }
@@ -62,14 +61,24 @@ fn main() {
                     println!("削除に失敗しました: {:?}", e);
                 }
             },
-            None => {
-                app.rss.show();
-            }
+            None => match app.rss.show() {
+                Ok(()) => {}
+                Err(e) => {
+                    println!("Error: {:#?}", e);
+                }
+            },
         },
         Some(Commands::Bookmark { action }) => match action {
             Some(Actions::Add { url }) => {
                 if let Some(url) = url {
-                    app.bookmark.add_link(url);
+                    match app.bookmark.add_link(url) {
+                        Ok(url) => {
+                            println!("{} を追加しました", url);
+                        }
+                        Err(e) => {
+                            println!("追加に失敗しました {:#?}", e);
+                        }
+                    }
                 }
             }
             Some(Actions::Delete) => match app.bookmark.delete_link() {
@@ -80,9 +89,12 @@ fn main() {
                     println!("削除に失敗しました: {:?}", e);
                 }
             },
-            None => {
-                app.bookmark.show();
-            }
+            None => match app.bookmark.show() {
+                Ok(()) => {}
+                Err(e) => {
+                    println!("Error: {:#?}", e);
+                }
+            },
         },
         Some(Commands::History) => {
             app.history.show();

@@ -1,5 +1,5 @@
 use super::file::File;
-use crate::app::Entity;
+use crate::app::entity::Entity;
 use chrono::Local;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;

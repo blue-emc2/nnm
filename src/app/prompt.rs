@@ -22,7 +22,7 @@ pub trait Prompt {
                 break;
             }
 
-            format!("入力された内容: {}", input);
+            println!("入力された内容: {}", input);
 
             if let Ok(index) = input.parse::<usize>() {
                 if index < urls.len() {
