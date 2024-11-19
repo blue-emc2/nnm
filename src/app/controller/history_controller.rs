@@ -18,12 +18,4 @@ impl HistoryController {
             }
         }
     }
-
-    // pub fn add_history(&self) {
-    //     // Implement the logic to add history
-    // }
-
-    // pub fn delete_history(&self) {
-    //     // Implement the logic to delete history
-    // }
 }
