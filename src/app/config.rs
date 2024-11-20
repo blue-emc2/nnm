@@ -5,14 +5,13 @@ use serde::{Deserialize, Serialize};
 use super::file::File;
 
 const DEFAULT_DISPLAY_LIMIT: i32 = 10;
-#[derive(Debug, Clone)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     display_limit: i32,
     chunk_size: i32,
-    bookmarks: Vec<String>, // お気に入り一覧
-    links: Vec<String>,     // rssのリンク一覧
-    history_expiaration: i32,   // 履歴の保持期間(日)
+    bookmarks: Vec<String>,   // お気に入り一覧
+    links: Vec<String>,       // rssのリンク一覧
+    history_expiaration: i32, // 履歴の保持期間(日)
 }
 
 pub enum ConfigMessage {
@@ -45,8 +44,16 @@ impl Config {
         self.links.as_ref()
     }
 
+    pub fn mut_links(&mut self) -> &mut Vec<String> {
+        &mut self.links
+    }
+
     pub fn bookmarks(&self) -> &Vec<String> {
         self.bookmarks.as_ref()
+    }
+
+    pub fn mut_bookmarks(&mut self) -> &mut Vec<String> {
+        &mut self.bookmarks
     }
 
     pub fn chunk_size(&self) -> i32 {
@@ -56,38 +63,5 @@ impl Config {
     // 今はhome下にしか作れない
     pub fn default_file_path(&self) -> PathBuf {
         self.file_path()
-    }
-
-    // ここらへんの関数が似ているのでなんとか整理したい
-    pub fn push_link(&mut self, url: &str) -> Result<String, std::io::Error> {
-        if !self.links.contains(&url.to_string()) {
-            self.links.push(url.to_string());
-            self.save_to_file(self.clone())?;
-        }
-        Ok(url.to_string())
-    }
-
-    pub fn push_bookmark(&mut self, url: &String) -> Result<(), std::io::Error> {
-        if !self.bookmarks.contains(&url.to_string()) {
-            self.bookmarks.push(url.to_string());
-            self.save_to_file(self.clone())?;
-        }
-        Ok(())
-    }
-
-    pub fn delete_link_and_save(&mut self, url: &str) -> Result<String, std::io::Error> {
-        if let Some(index) = self.links.iter().position(|x| x == url) {
-            self.links.remove(index);
-            self.save_to_file(self.clone())?;
-        }
-        Ok(url.to_string())
-    }
-
-    pub fn delete_bookmark_and_save(&mut self, url: &str) -> Result<String, std::io::Error> {
-        if let Some(index) = self.bookmarks.iter().position(|x| x == url) {
-            self.bookmarks.remove(index);
-            self.save_to_file(self.clone())?;
-        }
-        Ok(url.to_string())
     }
 }

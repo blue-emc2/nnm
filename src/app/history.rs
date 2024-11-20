@@ -1,11 +1,10 @@
-use crate::app::Entity;
-use std::path::PathBuf;
-use serde::{Deserialize, Serialize};
 use super::file::File;
+use crate::app::entity::Entity;
 use chrono::Local;
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
-#[derive(Debug, Clone)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct History {
     last_fetched_date: String,
     entity: Vec<Entity>,
