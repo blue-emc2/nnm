@@ -100,7 +100,7 @@ fn main() {
             app.history.show();
         }
         None => {
-            app.rss.run(options);
+            app.fetch_articles(options);
         }
     }
 }

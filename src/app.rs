@@ -9,6 +9,8 @@ mod parser;
 mod screen;
 mod table;
 
+use std::collections::HashMap;
+
 use controller::{
     bookmark_controller::BookmarkController, config_controller::ConfigController,
     history_controller::HistoryController, rss_controller::RssController,
@@ -30,5 +32,9 @@ impl App {
             config: ConfigController,
         };
         app
+    }
+
+    pub fn fetch_articles(&mut self, options: HashMap<String, String>) {
+        self.rss.index(options);
     }
 }

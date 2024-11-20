@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io};
+use std::{collections::HashMap, io::{self, ErrorKind}};
 
 use crate::app::{
     config::Config, entity::Entity, file::File, history::History, parser::Parser, prompt::Prompt,
@@ -58,19 +58,18 @@ impl RssController {
         Ok(())
     }
 
-    pub fn run(&mut self, options: HashMap<String, String>) {
-        if !self.is_config_exists() {
-            eprintln!(
-                "設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。"
-            );
-            return;
-        };
-
+    pub fn index(&mut self, options: HashMap<String, String>) {
         let config: Config = match Config::new().load_from_file() {
             Ok(config) => config,
-            Err(_) => {
+            Err(e) if e.kind() == ErrorKind::NotFound => {
                 eprintln!(
                     "設定ファイルが見つかりませんでした。\nnnm init で初期設定を行ってください。"
+                );
+                return;
+            }
+            Err(e   ) => {
+                eprintln!(
+                    "エラーが発生しました。\n{}", e
                 );
                 return;
             }
@@ -180,19 +179,6 @@ impl RssController {
         }
 
         Ok(())
-    }
-
-    fn is_config_exists(&self) -> bool {
-        let config = Config::new();
-        let exists = config.default_file_path().try_exists();
-        match exists {
-            Ok(true) => true,
-            Ok(false) => false,
-            Err(e) => {
-                println!("load_config: {:?}", e);
-                false
-            }
-        }
     }
 
     fn save_history(&self) -> Result<(), std::io::Error> {
