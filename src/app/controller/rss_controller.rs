@@ -1,4 +1,7 @@
-use std::{collections::HashMap, io::{self, ErrorKind}};
+use std::{
+    collections::HashMap,
+    io::{self, ErrorKind},
+};
 
 use crate::app::{
     config::Config, entity::Entity, file::File, history::History, parser::Parser, prompt::Prompt,
@@ -67,10 +70,8 @@ impl RssController {
                 );
                 return;
             }
-            Err(e   ) => {
-                eprintln!(
-                    "エラーが発生しました。\n{}", e
-                );
+            Err(e) => {
+                eprintln!("エラーが発生しました。\n{}", e);
                 return;
             }
         };
@@ -139,15 +140,6 @@ impl RssController {
     }
 
     async fn fetch_rss(url: String) -> Result<String, reqwest::Error> {
-        // let mut file = File::open("tests/fixtures/sample.xml").unwrap();
-        // let mut response = String::new();
-        // file.read_to_string(&mut response).unwrap();
-
-        // TODO: 後で引数とかで切り替えたい
-        // let url: &str = "https://game.watch.impress.co.jp/data/rss/1.0/gmw/feed.rdf";
-        // let url: &str = "https://b.hatena.ne.jp/entrylist/it.rss";
-        // let url: &str = "https://rss.itmedia.co.jp/rss/2.0/netlab.xml"; // 2.0
-
         let response = reqwest::get(&url).await?;
         let body = response.text().await?;
         Ok(body)

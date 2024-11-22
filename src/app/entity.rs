@@ -63,6 +63,7 @@ pub struct Item {
     pub title: Option<String>,
     pub description: Option<String>,
     pub summary: Option<String>,
+    pub content: Option<String>,
     pub link: Link,
     #[serde(rename = "pubDate")]
     pub pub_date: Option<String>,
@@ -70,12 +71,11 @@ pub struct Item {
 
 #[derive(Debug, Deserialize)]
 pub struct Rdf {
-    _channel: RdfChannel,
+    #[serde(skip)]
+    #[allow(dead_code)]
+    channel: Option<String>,
     pub item: Vec<Item>,
 }
-
-#[derive(Debug, Deserialize)]
-struct RdfChannel {}
 
 #[derive(Debug, Deserialize)]
 pub struct Rss {
